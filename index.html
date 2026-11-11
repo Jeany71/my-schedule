@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#173f32">
+  <meta name="description" content="A private shared staff scheduling app.">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+  <title>My Schedule</title>
+</head>
+<body>
+  <div id="authScreen" class="auth-wrap">
+    <section class="auth-card">
+      <div class="brand-mark">MS</div>
+      <p class="eyebrow">PRIVATE TEAM WORKSPACE</p>
+      <h1>My Schedule</h1>
+      <p class="muted">Sign in to manage your shared roster.</p>
+      <form id="loginForm">
+        <label>Email<input id="email" type="email" autocomplete="username" required placeholder="you@example.com"></label>
+        <label>Password<input id="password" type="password" autocomplete="current-password" required placeholder="Password"></label>
+        <button class="primary full" type="submit">Sign in</button>
+      </form>
+      <p id="authMessage" class="message" aria-live="polite"></p>
+      <p class="tiny muted">First-time setup: create the two user accounts in your Firebase project, then sign in here.</p>
+    </section>
+  </div>
+
+  <div id="app" class="app-shell hidden">
+    <header class="topbar">
+      <div><div class="eyebrow light">TEAM WORKSPACE</div><div class="top-title">My Schedule</div></div>
+      <button id="signOutBtn" class="avatar-btn" aria-label="Sign out">↗</button>
+    </header>
+    <main>
+      <section id="homePage" class="page">
+        <div class="welcome-row"><div><p class="eyebrow">OVERVIEW</p><h1>Good day</h1><p class="muted" id="todayLabel"></p></div><div class="date-orb">✦</div></div>
+        <div class="stats-grid">
+          <article class="stat-card"><span class="stat-label">Team members</span><strong id="employeeCount">0</strong><span class="stat-foot">In your roster</span></article>
+          <article class="stat-card"><span class="stat-label">Upcoming shifts</span><strong id="upcomingCount">0</strong><span class="stat-foot">Next 7 days</span></article>
+        </div>
+        <div class="section-head"><div><p class="eyebrow">COMING UP</p><h2>Next shifts</h2></div><button class="text-btn" data-go="schedule">View all →</button></div>
+        <div id="homeShifts" class="shift-list"></div>
+      </section>
+
+      <section id="schedulePage" class="page hidden">
+        <div class="page-heading"><div><p class="eyebrow">PLANNING</p><h1>Schedule</h1></div><button id="addShiftBtn" class="primary">＋ Add shift</button></div>
+        <div class="calendar-toolbar"><button id="prevWeek" class="round-btn">‹</button><strong id="weekLabel"></strong><button id="nextWeek" class="round-btn">›</button></div>
+        <div class="view-toggle"><button class="view-option active" data-view="week">Week</button><button class="view-option" data-view="month">Month</button></div>
+        <div id="calendar" class="calendar"></div>
+        <div class="section-head"><div><p class="eyebrow">ROSTER</p><h2>All shifts</h2></div></div>
+        <div id="allShifts" class="shift-list"></div>
+      </section>
+
+      <section id="employeesPage" class="page hidden">
+        <div class="page-heading"><div><p class="eyebrow">PEOPLE</p><h1>Employees</h1></div><button id="addEmployeeBtn" class="primary">＋ Add</button></div>
+        <p class="muted">Roster-only employees do not need an email or login.</p>
+        <div id="employeeList" class="employee-list"></div>
+      </section>
+
+      <section id="clockPage" class="page hidden">
+        <p class="eyebrow">TIME TRACKING</p><h1>Time Clock</h1>
+        <div class="clock-card"><div class="clock-icon">◷</div><h2 id="clockStatus">You are clocked out</h2><p class="muted">Basic time clock preview. Entries are stored on this device in this starter version.</p><button id="clockBtn" class="primary full">Clock in</button><p id="clockInfo" class="tiny muted"></p></div>
+      </section>
+
+      <section id="chatPage" class="page hidden">
+        <p class="eyebrow">TEAM COMMUNICATION</p><h1>Chat</h1>
+        <div class="empty-state"><div class="empty-icon">✉</div><h2>Team chat is coming later</h2><p class="muted">This first version focuses on shared scheduling and employee management.</p></div>
+      </section>
+
+      <section id="morePage" class="page hidden">
+        <p class="eyebrow">SETTINGS</p><h1>More</h1>
+        <div class="settings-card"><div><strong>Workspace</strong><p class="muted tiny">Private shared roster</p></div><span class="status-dot">● Connected</span></div>
+        <div class="settings-card"><div><strong>Signed in as</strong><p class="muted tiny" id="signedInEmail"></p></div></div>
+        <div class="settings-card"><div><strong>Data mode</strong><p class="muted tiny" id="dataMode"></p></div></div>
+        <p class="tiny muted">Both authorised accounts can edit the shared roster. Roster-only employees cannot sign in.</p>
+      </section>
+    </main>
+
+    <nav class="bottom-nav">
+      <button class="nav-item active" data-page="home"><span>⌂</span>Home</button>
+      <button class="nav-item" data-page="schedule"><span>▦</span>Schedule</button>
+      <button class="nav-item" data-page="employees"><span>♙</span>Team</button>
+      <button class="nav-item" data-page="clock"><span>◷</span>Clock</button>
+      <button class="nav-item" data-page="more"><span>•••</span>More</button>
+    </nav>
+  </div>
+
+  <dialog id="shiftDialog">
+    <form id="shiftForm" class="dialog-form">
+      <div class="dialog-head"><div><p class="eyebrow">ROSTER</p><h2 id="shiftDialogTitle">Add shift</h2></div><button type="button" class="close-btn" data-close="shiftDialog">×</button></div>
+      <input type="hidden" id="shiftId">
+      <label>Employee<select id="shiftEmployee" required></select></label>
+      <div class="two-col"><label>Date<input id="shiftDate" type="date" required></label><label>Role / position<input id="shiftRole" placeholder="e.g. Barista"></label></div>
+      <div class="two-col"><label>Start<input id="shiftStart" type="time" required></label><label>End<input id="shiftEnd" type="time" required></label></div>
+      <label>Location<input id="shiftLocation" placeholder="Optional"></label>
+      <label>Notes<textarea id="shiftNotes" rows="2" placeholder="Optional notes"></textarea></label>
+      <p id="shiftError" class="message"></p>
+      <div class="dialog-actions"><button type="button" class="secondary" data-close="shiftDialog">Cancel</button><button class="primary" type="submit">Save shift</button></div>
+      <button id="deleteShiftBtn" type="button" class="danger-link hidden">Delete this shift</button>
+    </form>
+  </dialog>
+
+  <dialog id="employeeDialog">
+    <form id="employeeForm" class="dialog-form">
+      <div class="dialog-head"><div><p class="eyebrow">TEAM</p><h2>Add employee</h2></div><button type="button" class="close-btn" data-close="employeeDialog">×</button></div>
+      <label>Full name<input id="employeeName" required maxlength="60" placeholder="e.g. Alex Smith"></label>
+      <label>Position<input id="employeeRole" maxlength="60" placeholder="e.g. Team member"></label>
+      <p class="tiny muted">This creates a roster-only employee. No email or account is needed.</p>
+      <div class="dialog-actions"><button type="button" class="secondary" data-close="employeeDialog">Cancel</button><button class="primary" type="submit">Add employee</button></div>
+    </form>
+  </dialog>
+  <div id="toast" class="toast" role="status"></div>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
