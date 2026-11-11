@@ -147,3 +147,60 @@ select:focus,
 textarea:focus {
   border-color: #64B5F6;
 }
+/* Brighter Connecteam-inspired blue */
+:root {
+  --green: #2196F3;
+  --green2: #1685E8;
+  --mint: #EAF5FF;
+  --ink: #243746;
+  --muted: #7B8B99;
+  --line: #E5EDF5;
+  --bg: #F7FAFD;
+  --white: #FFFFFF;
+}
+
+.topbar,
+.primary,
+.brand-mark,
+.toast {
+  background: #2196F3;
+}
+
+.primary:hover {
+  background: #1685E8;
+}
+
+.auth-wrap {
+  background: linear-gradient(145deg, #2196F3, #64B5F6);
+}
+
+.secondary,
+.date-orb,
+.shift-date,
+.initial,
+.day-chip,
+.view-toggle {
+  background: #EAF5FF;
+  color: #1685E8;
+}
+
+.day-cell.today {
+  border-color: #2196F3;
+  background: #F0F8FF;
+}
+
+.nav-item.active,
+.text-btn,
+.shift-time,
+.employee-hours,
+.status-dot,
+.round-btn,
+.view-option.active {
+  color: #2196F3;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: #64B5F6;
+}
