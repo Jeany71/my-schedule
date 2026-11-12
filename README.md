@@ -7,11 +7,16 @@ An original Connecteam-inspired private roster PWA for iPhone and Android.
 - Two authorised email addresses: c93300@gmail.com and quinlay.lu@gmail.com
 - Roster-only fictional employees (no email/login required)
 - Add, edit and delete shifts
-- Week/month calendar, upcoming shifts, employee hours totals
+- Connecteam-inspired Schedule screen with week and month calendar views, grouped roster cards, Only me / Everyone filters, and shift confirmation actions
+- Home quick links include the orange Job Scheduling entry shown in the reference recording
+- Search / Assets page with searchable asset tiles
+- Chat layout preview with people list and conversation shell (messaging is not connected yet)
+- Profile page includes Time Off, Form Submissions, My Activity, Personal Documents, Support Centre and Settings entries
+- Upcoming shifts and employee hours totals
 - Installable PWA shell and basic local time-clock preview
 
 ## Important
-This is a starter project, not yet a live app. The Firebase web app configuration has been added, but Authentication, Firestore and hosting still need to be configured. The sign-in screen will not work until Email/Password Authentication is enabled and both authorised accounts are created; local demo mode is not shared between devices. Chat is a placeholder and time-clock entries are device-local only.
+This is an updated interface build, not yet a fully featured Connecteam replacement. The Firebase web app configuration has been added, but Authentication, Firestore and hosting still need to be configured. The sign-in screen will not work until Email/Password Authentication is enabled and both authorised accounts are created; local demo mode is not shared between devices. Chat is currently a visual preview and does not send or sync messages. Time-clock entries are device-local only. Time Off, Quick Tasks, Updates, Events, Knowledge Base, Support Centre and Settings are navigation placeholders until their data workflows are implemented.
 
 ## Setup required for real shared use
 1. Create a Firebase project at https://console.firebase.google.com/

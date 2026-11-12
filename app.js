@@ -16,6 +16,7 @@ const WORKSPACE_ID = "private-shared-workspace";
 const DEMO_MODE = !firebaseConfig.apiKey || !firebaseConfig.projectId;
 
 let auth=null, db=null, employees=[], shifts=[], weekOffset=0, viewMode="week", unsubE=null, unsubS=null;
+let selectedScheduleDate=today(), scheduleFilter="mine", scheduleCompact=false, scheduleUserName="", monthOffset=0, chatFilter="all";
 let clockIn=localStorage.getItem("ms_clock_in")||"";
 const $=id=>document.getElementById(id);
 const today=()=>{const d=new Date();return iso(d)};
@@ -42,26 +43,60 @@ function render(){
  let ws=weekStart(),weekDays=Array.from({length:7},(_,i)=>{let d=new Date(ws);d.setDate(d.getDate()+i);return d;});
  const wh=$("weeklyHours"); if(wh) wh.innerHTML=weekDays.map(d=>{let key=iso(d),hrs=shifts.filter(s=>s.date===key).reduce((n,s)=>n+duration(s),0);return `<div class="week-hour ${key===today()?"today":""}">${d.toLocaleDateString([],{weekday:"short"})}<strong>${hrs?hrs.toFixed(1)+"h":"—"}</strong></div>`}).join("");
  let next=up[0];if($("homeClockShift")){ $("homeClockShift").textContent=next?(next.role||"Scheduled shift") : "No upcoming shift";$("homeClockTime").textContent=next?`${date(next.date).toLocaleDateString([],{weekday:"long",month:"short",day:"numeric"})}  ${time(next.start)} – ${time(next.end)}`:"Your upcoming shifts will appear here"; }
- $("allShifts").innerHTML=[...shifts].sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start)).map(card).join("")||empty("No shifts scheduled.");
+ renderSchedule();
+ renderChat();
  $("employeeList").innerHTML=employees.map(e=>{let h=shifts.filter(s=>s.employeeId===e.id).reduce((v,s)=>v+duration(s),0);return `<div class="employee-row"><div class="initial">${esc(e.name[0]?.toUpperCase()||"?")}</div><div class="employee-meta"><strong>${esc(e.name)}</strong><p>${esc(e.role||"Team member")} · Roster only</p></div><div class="employee-hours">${h.toFixed(1)}h</div></div>`}).join("")||empty("No employees yet.");
  renderCalendar();clockRender();
 }
 function weekStart(){let d=date(today());d.setDate(d.getDate()-((d.getDay()+6)%7)+weekOffset*7);return d}
 function renderCalendar(){
- let first=weekStart(),days;
- if(viewMode==="week")days=Array.from({length:7},(_,i)=>{let d=new Date(first);d.setDate(d.getDate()+i);return d});
- else {let count=new Date(first.getFullYear(),first.getMonth()+1,0).getDate(),offset=(new Date(first.getFullYear(),first.getMonth(),1).getDay()+6)%7;days=Array(offset).fill(null).concat(Array.from({length:count},(_,i)=>new Date(first.getFullYear(),first.getMonth(),i+1)))}
- let last=days.filter(Boolean).at(-1);$("weekLabel").textContent=viewMode==="week"?`${first.toLocaleDateString([],{month:"short",day:"numeric"})} – ${last.toLocaleDateString([],{month:"short",day:"numeric",year:"numeric"})}`:first.toLocaleDateString([],{month:"long",year:"numeric"});
- $("calendar").innerHTML=days.map(d=>{if(!d)return "<div></div>";let key=iso(d),list=shifts.filter(s=>s.date===key);return `<div class="day-cell ${key===today()?"today":""}"><div class="day-name">${d.toLocaleDateString([],{weekday:"short"})}</div><div class="day-number">${d.getDate()}</div>${list.slice(0,3).map(s=>`<span class="day-chip">${esc(name(s.employeeId))} ${esc(s.start)}</span>`).join("")}${list.length>3?`<span class="day-chip">+${list.length-3} more</span>`:""}</div>`}).join("");
+ const host=$("calendar");
+ if(viewMode==="month"){
+  const base=new Date();base.setDate(1);base.setMonth(base.getMonth()+monthOffset);
+  const first=new Date(base);first.setDate(1-((first.getDay()+6)%7));
+  const days=Array.from({length:42},(_,i)=>{let d=new Date(first);d.setDate(first.getDate()+i);return d;});
+  $("weekLabel").textContent=base.toLocaleDateString([],{month:"long",year:"numeric"});
+  host.classList.add("month-calendar");
+  host.innerHTML=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(x=>`<span class="month-weekday">${x}</span>`).join("")+days.map(d=>{const key=iso(d),has=shifts.some(s=>s.date===key),active=key===selectedScheduleDate;return `<button class="schedule-day month-day ${active?"selected":""} ${key===today()?"today":""} ${d.getMonth()!==base.getMonth()?"outside-month":""}" data-schedule-date="${key}"><span class="daynum">${d.getDate()}</span><span class="daydot" style="visibility:${has?"visible":"hidden"}"></span></button>`}).join("");
+ }else{
+  let first=weekStart(),days=Array.from({length:7},(_,i)=>{let d=new Date(first);d.setDate(d.getDate()+i);return d;});
+  if(!days.some(d=>iso(d)===selectedScheduleDate))selectedScheduleDate=iso(first);
+  $("weekLabel").textContent=`${date(selectedScheduleDate).toLocaleDateString([],{weekday:"long",month:"long",day:"numeric",year:"numeric"})}`;
+  host.classList.remove("month-calendar");
+  host.innerHTML=days.map(d=>{let key=iso(d),active=key===selectedScheduleDate,has=shifts.some(s=>s.date===key);return `<button class="schedule-day ${active?"selected":""} ${key===today()?"today":""}" data-schedule-date="${key}"><span class="weekday">${d.toLocaleDateString([],{weekday:"short"})}</span><span class="daynum">${d.getDate()}</span><span class="daydot" style="visibility:${has?"visible":"hidden"}"></span></button>`}).join("");
+ }
+ $("scheduleMonthToggle").classList.toggle("active",viewMode==="month");
 }
+function renderSchedule(){
+ renderCalendar();
+ const host=$("allShifts"); if(!host)return;
+ if(scheduleFilter==="availability") {host.innerHTML='<div class="schedule-availability"><strong>My availability</strong><br>Availability planning is the next feature to add. Your existing shifts and shared roster are unchanged.</div>';return;}
+ let rangeStart,rangeEnd;
+ if(viewMode==="month"){const base=new Date();base.setDate(1);base.setMonth(base.getMonth()+monthOffset);rangeStart=new Date(base.getFullYear(),base.getMonth(),1);rangeEnd=new Date(base.getFullYear(),base.getMonth()+1,0);}
+ else{rangeStart=weekStart();rangeEnd=new Date(rangeStart);rangeEnd.setDate(rangeEnd.getDate()+6);}
+ let list=shifts.filter(s=>s.date>=iso(rangeStart)&&s.date<=iso(rangeEnd));
+ const q=($("scheduleSearch")?.value||"").trim().toLowerCase();
+ if(scheduleFilter==="mine"&&scheduleUserName){list=list.filter(s=>name(s.employeeId).toLowerCase().includes(scheduleUserName.toLowerCase()));}
+ list=list.filter(s=>s.date>=selectedScheduleDate);
+ if(q)list=list.filter(s=>(s.role||"Shift").toLowerCase().includes(q)||name(s.employeeId).toLowerCase().includes(q)||(s.location||"").toLowerCase().includes(q));
+ list.sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start));
+ const groups=new Map();
+ for(const s of list){const k=[s.date,s.role||"Shift",s.start,s.end,s.location||""].join("|");if(!groups.has(k))groups.set(k,[]);groups.get(k).push(s)}
+ const byDay=new Map();
+ for(const group of groups.values()){const day=group[0].date;if(!byDay.has(day))byDay.set(day,[]);byDay.get(day).push(group)}
+ const days=[...byDay.keys()].sort();
+ if(!days.length){host.innerHTML=`<div class="schedule-empty">No shifts scheduled ${viewMode==="month"?"this month":"for this week"}.</div>`;return;}
+ host.innerHTML=days.map(day=>{const d=date(day),dayGroups=byDay.get(day);return `<section class="schedule-date-group"><div class="schedule-date-label"><strong>${d.getDate()}</strong><span>${d.toLocaleDateString([],{weekday:"short"})}</span></div><div class="schedule-cards">${dayGroups.map(g=>{const first=g[0],ids=g.map(x=>x.id),names=g.map(x=>name(x.employeeId)),initials=(names[0]||"?").split(/\s+/).map(x=>x[0]||"").join("").slice(0,2).toUpperCase(),status=first.status||"pending",hours=duration(first),durationText=Number.isInteger(hours)?hours+"h":hours.toFixed(1)+"h";return `<article class="schedule-shift-card" data-edit="${esc(first.id)}"><div class="schedule-shift-head"><strong class="schedule-shift-title">${esc(first.role||"Shift")}</strong><div class="schedule-avatars"><span class="schedule-avatar">${esc(initials)}</span>${names.length>1?`<span class="schedule-avatar-more">+${names.length-1}</span>`:""}</div></div><div class="schedule-shift-time">${time(first.start)} – ${time(first.end)} (${durationText})</div><p class="schedule-employee-names">${names.map(esc).join(",\n")}</p>${status!=="pending"?`<p class="schedule-status ${status}">${status==="confirmed"?"Confirmed":"Rejected"}</p>`:""}<div class="schedule-card-actions"><button class="schedule-reject" data-shift-status="rejected" data-shift-ids="${ids.join(",")}">Reject</button><button class="schedule-confirm" data-shift-status="confirmed" data-shift-ids="${ids.join(",")}">Confirm</button></div></article>`}).join("")}</div></section>`}).join("");
+}
+
 async function add(type,data){if(DEMO_MODE){data.id=crypto.randomUUID();(type==="employees"?employees:shifts).push(data);demoSave();render()}else await addDoc(collection(db,`workspaces/${WORKSPACE_ID}/${type}`),data)}
 async function update(type,id,data){if(DEMO_MODE){Object.assign((type==="employees"?employees:shifts).find(x=>x.id===id),data);demoSave();render()}else await updateDoc(doc(db,`workspaces/${WORKSPACE_ID}/${type}`,id),data)}
 async function remove(type,id){if(DEMO_MODE){if(type==="shifts")shifts=shifts.filter(x=>x.id!==id);else employees=employees.filter(x=>x.id!==id);demoSave();render()}else await deleteDoc(doc(db,`workspaces/${WORKSPACE_ID}/${type}`,id))}
 function openShift(s=null){$("shiftForm").reset();$("shiftId").value=s?.id||"";$("shiftDialogTitle").textContent=s?"Edit shift":"Add shift";$("deleteShiftBtn").classList.toggle("hidden",!s);$("shiftEmployee").innerHTML=employees.map(e=>`<option value="${esc(e.id)}">${esc(e.name)}</option>`).join("");$("shiftDate").value=s?.date||today();$("shiftStart").value=s?.start||"09:00";$("shiftEnd").value=s?.end||"17:00";$("shiftRole").value=s?.role||"";$("shiftLocation").value=s?.location||"";$("shiftNotes").value=s?.notes||"";if(s)$("shiftEmployee").value=s.employeeId;$("shiftError").textContent="";$("shiftDialog").showModal()}
-function showPage(p){document.querySelectorAll(".page").forEach(x=>x.classList.add("hidden"));$(`${p}Page`).classList.remove("hidden");document.querySelectorAll(".nav-item").forEach(x=>x.classList.toggle("active",x.dataset.page===p))}
+function showPage(p){document.querySelectorAll(".page").forEach(x=>x.classList.add("hidden"));$(`${p}Page`).classList.remove("hidden");$("app").classList.toggle("schedule-open",p==="schedule");document.querySelectorAll(".nav-item").forEach(x=>x.classList.toggle("active",x.dataset.page===p))}
 function clockRender(){let active=!!clockIn;const status=$("clockStatus");if(status)status.textContent=active?"You are clocked in":"You are clocked out";const legacy=$("clockStatusLegacy");if(legacy)legacy.textContent=active?"You are clocked in":"You are clocked out";const btn=$("clockBtn");if(btn){const label=$("clockBtnText");if(label)label.textContent=active?"End shift":"Start shift";else btn.textContent=active?"Clock out":"Clock in";}const info=$("clockInfo");if(info)info.textContent=active?`Started ${new Date(clockIn).toLocaleString()}`:"Time entries are saved on this device."}
 function start(user){
- const email=(user.email||"").toLowerCase();const first=email.startsWith("c93300")?"Jeany":email.startsWith("quinlay")?"Quinlay":(email.split("@")[0]||"there");
+ const email=(user.email||"").toLowerCase();const first=email.startsWith("c93300")?"Jeany":email.startsWith("quinlay")?"Quinlay":(email.split("@")[0]||"there");scheduleUserName=first;
  const initials=first.slice(0,2).toUpperCase();["homeAvatar","profileAvatar"].forEach(id=>{if($(id))$(id).textContent=initials});if($("homeFirstName"))$("homeFirstName").textContent=first;if($("profileName"))$("profileName").textContent=first+" "+(email.startsWith("c93300")?"Lin":"");if($("profileDate"))$("profileDate").textContent=new Date().toLocaleDateString([],{day:"2-digit",month:"2-digit",year:"numeric"});
  $("authScreen").classList.add("hidden");$("app").classList.remove("hidden");$("signedInEmail").textContent=user.email||"Demo preview";$("dataMode").textContent=DEMO_MODE?"Local demo — not shared between phones":"Firebase cloud sync";
  if(DEMO_MODE){demoLoad();render()}else{let p=`workspaces/${WORKSPACE_ID}`;unsubE?.();unsubS?.();unsubE=onSnapshot(collection(db,p,"employees"),s=>{employees=s.docs.map(d=>({id:d.id,...d.data()}));render()});unsubS=onSnapshot(collection(db,p,"shifts"),s=>{shifts=s.docs.map(d=>({id:d.id,...d.data()}));render()})}
@@ -71,9 +106,20 @@ $("addShiftBtn").onclick=()=>openShift();$("addEmployeeBtn").onclick=()=>{$("emp
 $("shiftForm").addEventListener("submit",async e=>{e.preventDefault();let id=$("shiftId").value,data={employeeId:$("shiftEmployee").value,date:$("shiftDate").value,start:$("shiftStart").value,end:$("shiftEnd").value,role:$("shiftRole").value.trim(),location:$("shiftLocation").value.trim(),notes:$("shiftNotes").value.trim()};if(!data.employeeId){$("shiftError").textContent="Add an employee first.";return}try{if(id)await update("shifts",id,data);else await add("shifts",data);$("shiftDialog").close();toast("Shift saved")}catch(err){$("shiftError").textContent=err.message}});
 $("deleteShiftBtn").onclick=async()=>{let id=$("shiftId").value;if(id&&confirm("Delete this shift?")){await remove("shifts",id);$("shiftDialog").close();toast("Shift deleted")}};
 $("employeeForm").addEventListener("submit",async e=>{e.preventDefault();let n=$("employeeName").value.trim();if(!n)return;await add("employees",{name:n,role:$("employeeRole").value.trim()||"Team member"});$("employeeDialog").close();toast("Employee added")});
-$("prevWeek").onclick=()=>{weekOffset--;renderCalendar()};$("nextWeek").onclick=()=>{weekOffset++;renderCalendar()};
-document.querySelectorAll(".view-option").forEach(b=>b.onclick=()=>{viewMode=b.dataset.view;document.querySelectorAll(".view-option").forEach(x=>x.classList.toggle("active",x===b));renderCalendar()});
-document.addEventListener("click",e=>{let c=e.target.closest("[data-edit]");if(c){let s=shifts.find(x=>x.id===c.dataset.edit);if(s)openShift(s)}let x=e.target.closest("[data-close]");if(x)$(x.dataset.close).close();let n=e.target.closest("[data-page]");if(n)showPage(n.dataset.page);let g=e.target.closest("[data-go]");if(g)showPage(g.dataset.go)});
+$("prevWeek").onclick=()=>{if(viewMode==="month"){monthOffset--;const d=new Date();d.setDate(1);d.setMonth(d.getMonth()+monthOffset);selectedScheduleDate=iso(d);}else{weekOffset--;selectedScheduleDate=iso(weekStart())}renderSchedule()};$("nextWeek").onclick=()=>{if(viewMode==="month"){monthOffset++;const d=new Date();d.setDate(1);d.setMonth(d.getMonth()+monthOffset);selectedScheduleDate=iso(d);}else{weekOffset++;selectedScheduleDate=iso(weekStart())}renderSchedule()};
+$("scheduleToday").onclick=()=>{weekOffset=0;monthOffset=0;selectedScheduleDate=today();renderSchedule()};
+$("scheduleMonthToggle").onclick=()=>{viewMode=viewMode==="month"?"week":"month";renderSchedule()};
+$("scheduleCompact").onclick=()=>{scheduleCompact=!scheduleCompact;$("schedulePage").classList.toggle("compact-schedule",scheduleCompact)};
+$("scheduleSearchToggle").onclick=()=>{$("scheduleSearchBox").classList.toggle("hidden");if(!$("scheduleSearchBox").classList.contains("hidden"))$("scheduleSearch").focus()};
+$("scheduleSearch").addEventListener("input",renderSchedule);
+$("assetsSearch").addEventListener("input",e=>{const q=e.target.value.trim().toLowerCase();document.querySelectorAll(".asset-card").forEach(card=>card.classList.toggle("hidden",!card.textContent.toLowerCase().includes(q)));document.querySelectorAll(".asset-heading").forEach(h=>{const section=h.nextElementSibling;h.classList.toggle("hidden",!section||![...section.querySelectorAll(".asset-card")].some(c=>!c.classList.contains("hidden")))});});
+function renderChat(){const host=$("chatList"),q=$("chatSearch").value.trim().toLowerCase();let people=employees.filter(e=>(e.name||"").toLowerCase().includes(q));if(chatFilter==="groups"||chatFilter==="unread")people=[];const emptyMessage=chatFilter==="groups"?"Group conversations will appear when messaging is connected.":chatFilter==="unread"?"Unread messages will appear when messaging is connected.":"No people found.";host.innerHTML=people.map(e=>`<button class="chat-person" data-chat-person="${esc(e.id)}"><span class="chat-person-avatar">${esc((e.name||"?").split(/\s+/).map(x=>x[0]||"").join("").slice(0,2).toUpperCase())}</span><span class="chat-person-copy"><strong>${esc(e.name||"Team member")}</strong><small>${esc(e.role||"Team member")}</small></span><span class="chat-person-time">›</span></button>`).join("")||`<p class="chat-list-empty">${emptyMessage}</p>`;}
+$("chatSearch").addEventListener("input",renderChat);document.querySelectorAll(".chat-filter").forEach(b=>b.onclick=()=>{chatFilter=b.dataset.chatFilter;document.querySelectorAll(".chat-filter").forEach(x=>x.classList.toggle("active",x===b));renderChat()});
+$("chatList").addEventListener("click",e=>{const b=e.target.closest("[data-chat-person]");if(!b)return;const person=employees.find(x=>x.id===b.dataset.chatPerson);$("chatPreview").innerHTML=`<div class="chat-preview-icon">${esc((person?.name||"?")[0])}</div><strong>${esc(person?.name||"Team member")}</strong><p>This conversation screen is a visual preview. Messages are not sent or synced yet.</p>`;});
+$("chatCompose").onclick=()=>toast("Messaging will be connected in a later build.");
+$("scheduleSettings").onclick=()=>toast("Schedule settings will be added next.");
+document.querySelectorAll(".schedule-tab").forEach(b=>b.onclick=()=>{scheduleFilter=b.dataset.scheduleFilter;document.querySelectorAll(".schedule-tab").forEach(x=>x.classList.toggle("active",x===b));renderSchedule()});
+document.addEventListener("click",async e=>{let day=e.target.closest("[data-schedule-date]");if(day){selectedScheduleDate=day.dataset.scheduleDate;renderSchedule();return}let statusBtn=e.target.closest("[data-shift-status]");if(statusBtn){e.stopPropagation();const status=statusBtn.dataset.shiftStatus;for(const id of statusBtn.dataset.shiftIds.split(",")){try{await update("shifts",id,{status})}catch(err){toast("Could not update shift status: "+err.message);return}}toast(status==="confirmed"?"Shift confirmed":"Shift rejected");renderSchedule();return}let c=e.target.closest("[data-edit]");if(c){let s=shifts.find(x=>x.id===c.dataset.edit);if(s)openShift(s)}let x=e.target.closest("[data-close]");if(x)$(x.dataset.close).close();let n=e.target.closest("[data-page]");if(n)showPage(n.dataset.page);let g=e.target.closest("[data-go]");if(g)showPage(g.dataset.go)});
 $("clockBtn").onclick=()=>{if(clockIn){clockIn="";localStorage.removeItem("ms_clock_in");toast("Clocked out")}else{clockIn=new Date().toISOString();localStorage.setItem("ms_clock_in",clockIn);toast("Clocked in")}clockRender()};
 $("signOutBtn").onclick=async()=>{if(!DEMO_MODE)await signOut(auth);unsubE?.();unsubS?.();$("app").classList.add("hidden");$("authScreen").classList.remove("hidden")};
 document.querySelectorAll(".nav-item").forEach(b=>b.addEventListener("click",()=>showPage(b.dataset.page)));
