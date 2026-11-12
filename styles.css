@@ -99,3 +99,46 @@ body{background:#fff;color:#111;font-family:-apple-system,BlinkMacSystemFont,"Se
 .chat-page{padding:20px 0 22px}.chat-heading{display:flex;align-items:center;justify-content:space-between;padding:0 20px 16px}.chat-heading h1{font-size:27px}.chat-compose{width:40px;height:40px;border-radius:50%;background:#eaf4ff;color:#2996f5;font-size:25px}
 .chat-search{margin:0 20px 15px;background:#f2f3f5;border-radius:24px;height:44px;display:flex;align-items:center;gap:10px;padding:0 15px;color:#89939d}.chat-search input{border:0;outline:0;background:transparent;flex:1;min-width:0;font-size:14px}.chat-filters{display:flex;gap:9px;padding:0 20px 15px;border-bottom:1px solid #edf0f2;overflow:auto}.chat-filter{background:#f2f4f6;color:#7d8994;padding:8px 16px;border-radius:20px;white-space:nowrap;font-size:12px}.chat-filter.active{background:#e5f2ff;color:#168fe5;font-weight:700}.chat-content{display:grid;grid-template-columns:1fr;min-height:360px}.chat-list{display:grid;align-content:start}.chat-person{display:flex;align-items:center;gap:12px;background:#fff;text-align:left;padding:12px 18px;border-bottom:1px solid #f0f2f4;min-height:70px}.chat-person-avatar{width:43px;height:43px;border-radius:50%;background:#eaf2ff;color:#398cff;display:grid;place-items:center;font-weight:700;flex:0 0 43px}.chat-person-copy{display:grid;gap:4px;min-width:0;flex:1}.chat-person-copy strong{font-size:14px;color:#26384a}.chat-person-copy small{font-size:11px;color:#98a2ac}.chat-person-time{color:#aeb7bf;font-size:22px}.chat-list-empty{padding:18px 20px;color:#929ba5;font-size:13px}.chat-preview{display:none}.chat-preview-icon{width:56px;height:56px;border-radius:50%;background:#eaf4ff;color:#2996f5;display:grid;place-items:center;font-size:23px;margin:0 auto 14px}.chat-preview strong{display:block;color:#26384a}.chat-preview p{font-size:12px;line-height:1.6;color:#929ba5;max-width:250px;margin:8px auto}
 @media(min-width:700px){.chat-content{grid-template-columns: minmax(260px, .9fr) 1.1fr}.chat-preview{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:#f8fafc;padding:25px;min-height:420px}}
+
+/* Refinements from the November 13 screen recordings */
+.employee-picker{border:0;padding:0;margin:0 0 14px;min-width:0}
+.employee-picker legend{font-size:13px;font-weight:700;margin-bottom:8px;color:#26384a}
+.employee-picker legend span{font-weight:400;color:#8a949e}
+.employee-check-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;max-height:190px;overflow:auto;padding:2px}
+.employee-check{display:flex;align-items:center;gap:8px;padding:10px;border:1px solid #e5e9ec;border-radius:10px;font-size:13px}
+.employee-check input{width:17px;height:17px;accent-color:var(--blue)}
+.calendar-expand-btn{display:block;margin:0 auto 10px;background:transparent;color:var(--blue);font-size:13px;padding:5px 12px}
+.schedule-shift-card.status-confirmed{background:#8eb48a;border-color:#8eb48a;color:#fff}
+.schedule-shift-card.status-confirmed .schedule-shift-title,.schedule-shift-card.status-confirmed .schedule-shift-time,.schedule-shift-card.status-confirmed .schedule-employee-names{color:#fff}
+.schedule-shift-card.status-confirmed:before{background:#6f9d70}
+.schedule-shift-card.status-rejected{background:#5d91bd;border-color:#5d91bd;color:#fff}
+.schedule-shift-card.status-rejected .schedule-shift-title,.schedule-shift-card.status-rejected .schedule-shift-time,.schedule-shift-card.status-rejected .schedule-employee-names{color:#fff}
+.schedule-shift-card.status-rejected:before{background:#477ca9}
+.schedule-status-icon{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;font-size:23px;font-weight:700;flex:0 0 28px;background:#fff}
+.schedule-status-icon.confirmed{color:#39a94e}
+.schedule-status-icon.rejected{color:#e44855}
+.availability-heading{display:flex;align-items:center;justify-content:space-between;padding:14px 14px 0;font-size:16px}
+.availability-hint{padding:0 14px;color:#87929c;font-size:12px}
+.availability-list{padding:0 12px 110px}
+.availability-row{display:flex;align-items:center;gap:12px;padding:11px 8px;border-bottom:1px solid #edf0f2;min-height:66px}
+.availability-date{width:38px;display:flex;flex-direction:column;align-items:center;color:#687581}
+.availability-date b{font-size:18px;color:#26384a}
+.availability-date span{font-size:10px}
+.availability-copy{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;font-size:13px}
+.availability-copy small{color:#8a949e;font-size:11px}
+.availability-menu{background:#f3f5f6;color:#78838d;border-radius:9px;padding:7px 9px;letter-spacing:2px}
+.toggle-line{display:flex;align-items:center;justify-content:space-between;padding:8px 0;font-size:13px}
+.toggle-line input{width:20px;height:20px;accent-color:var(--blue)}
+
+.schedule-shift-card.status-confirmed,.schedule-shift-card.status-rejected{color:#fff}
+.schedule-shift-card.status-confirmed .schedule-shift-title,.schedule-shift-card.status-confirmed .schedule-shift-time,.schedule-shift-card.status-confirmed .schedule-employee-names,
+.schedule-shift-card.status-rejected .schedule-shift-title,.schedule-shift-card.status-rejected .schedule-shift-time,.schedule-shift-card.status-rejected .schedule-employee-names{color:#fff}
+.schedule-shift-card.status-confirmed,.schedule-shift-card.status-rejected{background:#8eb48a;border-color:#8eb48a}
+.schedule-shift-card.status-confirmed:nth-child(3n+2),.schedule-shift-card.status-rejected:nth-child(3n+2){background:#5d91bd;border-color:#5d91bd}
+.schedule-shift-card.status-confirmed:nth-child(3n),.schedule-shift-card.status-rejected:nth-child(3n){background:#83a6aa;border-color:#83a6aa}
+.schedule-shift-card.status-confirmed:before,.schedule-shift-card.status-rejected:before{background:rgba(0,0,0,.12)}
+
+.status-confirm-dialog{min-width:min(82vw,340px)}
+#shiftStatusConfirm.danger{background:#df535c;color:#fff}
+
+.availability-choice{display:block;width:100%;text-align:left;padding:15px 13px;margin:8px 0;border:1px solid #e8ecef;border-radius:12px;background:#f8fafb;color:#293b4d;font-size:14px}
