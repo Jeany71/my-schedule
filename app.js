@@ -16,11 +16,11 @@ const WORKSPACE_ID = "private-shared-workspace";
 const DEMO_MODE = !firebaseConfig.apiKey || !firebaseConfig.projectId;
 
 let auth=null, db=null, employees=[], shifts=[], weekOffset=0, viewMode="week", unsubE=null, unsubS=null;
+const iso=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+const today=()=>{const d=new Date();return iso(d)};
 let selectedScheduleDate=today(), scheduleFilter="mine", scheduleCompact=false, scheduleUserName="", monthOffset=0, chatFilter="all";
 let clockIn=localStorage.getItem("ms_clock_in")||"";
 const $=id=>document.getElementById(id);
-const today=()=>{const d=new Date();return iso(d)};
-const iso=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 const date=s=>new Date(`${s}T12:00:00`);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const time=s=>{const [h,m]=s.split(":").map(Number),d=new Date();d.setHours(h,m);return d.toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})};
