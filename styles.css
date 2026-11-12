@@ -142,3 +142,60 @@ body{background:#fff;color:#111;font-family:-apple-system,BlinkMacSystemFont,"Se
 #shiftStatusConfirm.danger{background:#df535c;color:#fff}
 
 .availability-choice{display:block;width:100%;text-align:left;padding:15px 13px;margin:8px 0;border:1px solid #e8ecef;border-radius:12px;background:#f8fafb;color:#293b4d;font-size:14px}
+
+/* Polished roster styling: closer to the clean, colour-coded Connecteam schedule feel */
+#schedulePage.schedule-page{background:#fff;color:#263746}
+.schedule-topbar{height:64px;padding:0 17px;gap:12px;border-bottom:1px solid #f1f3f5}
+.schedule-back{font-size:35px;width:28px}
+.schedule-company{font-size:17px;font-weight:650;letter-spacing:0;color:#263746}
+.schedule-tools{gap:10px}
+.schedule-tools button{width:34px;height:36px;display:grid;place-items:center;border-radius:10px;font-size:22px;color:#168fe5}
+.schedule-tools button:active{background:#eaf5ff}
+.schedule-search{padding:10px 16px 8px}
+.schedule-search input{height:40px;background:#f4f6f8;border:1px solid #edf0f2;font-size:13px}
+.schedule-weekbar{padding:9px 10px 11px;border-bottom:1px solid #edf0f2;grid-template-columns:22px minmax(0,1fr) 22px}
+.week-arrow{font-size:24px;color:#2196e8}
+.schedule-days{gap:0}
+.schedule-day{gap:7px;padding:3px 0 5px;color:#9aa6b2}
+.schedule-day .weekday{font-size:11px;font-weight:500;color:#a0aab4}
+.schedule-day .daynum{width:34px;height:34px;font-size:15px;font-weight:600;color:#34495d}
+.schedule-day .daydot{width:4px;height:4px;margin-top:-5px}
+.schedule-day.selected .daynum{background:#159fe0;color:#fff;box-shadow:0 2px 5px #159fe044}
+.schedule-day.today:not(.selected) .daynum{border:1px solid #159fe0}
+.schedule-day-caption{font-size:11px;color:#8795a3;padding:7px 17px 2px}
+.schedule-shift-list{padding:10px 13px 115px 10px;gap:15px}
+.schedule-date-group{grid-template-columns:42px minmax(0,1fr);gap:8px}
+.schedule-date-label{padding-top:15px;color:#7f91a1;font-size:11px;line-height:1.2}
+.schedule-date-label strong{font-size:23px;font-weight:600;color:#8a9cac;line-height:1.15}
+.schedule-date-label span{font-size:12px;color:#9aa7b2}
+.schedule-cards{gap:8px}
+.schedule-shift-card{border:0;border-radius:10px;padding:12px 12px 11px 14px;box-shadow:0 2px 5px #1c34400d;min-height:94px;color:#fff;overflow:hidden}
+.schedule-shift-card:before{width:3px;border-radius:10px 0 0 10px;background:rgba(255,255,255,.55)}
+.schedule-shift-card:nth-child(3n+1){background:#8aa978}
+.schedule-shift-card:nth-child(3n+2){background:#739b98}
+.schedule-shift-card:nth-child(3n){background:#5686b2}
+.schedule-shift-head{align-items:flex-start;gap:8px}
+.schedule-shift-title{font-size:14px;font-weight:700;line-height:1.25;color:#fff;letter-spacing:.05px}
+.schedule-avatars{min-width:0;flex-shrink:0}
+.schedule-avatar{width:27px;height:27px;flex-basis:27px;border:2px solid rgba(255,255,255,.8);background:#d9efff;color:#2876a7;font-size:9px;font-weight:800}
+.schedule-avatar-more{height:25px;min-width:25px;display:grid;place-items:center;margin-left:-4px;padding:0 5px;border-radius:15px;background:#fff;color:#536779;font-size:10px;font-weight:700}
+.schedule-shift-time{font-size:11px;color:rgba(255,255,255,.92);margin:4px 0 6px;line-height:1.3}
+.schedule-employee-names{font-size:11px;line-height:1.35;color:rgba(255,255,255,.97);margin:0 0 7px;white-space:pre-line}
+.schedule-card-actions{gap:7px;margin-top:8px}
+.schedule-card-actions button{height:34px;border-radius:18px;font-size:12px;font-weight:650}
+.schedule-reject{background:rgba(255,255,255,.96);border:1px solid rgba(255,255,255,.8);color:#536879}
+.schedule-confirm{background:#159f6c;color:#fff;border:1px solid rgba(255,255,255,.15)}
+.schedule-shift-card.status-confirmed,.schedule-shift-card.status-rejected{color:#fff}
+.schedule-shift-card.status-confirmed:nth-child(3n+1),.schedule-shift-card.status-rejected:nth-child(3n+1){background:#8aa978;border-color:transparent}
+.schedule-shift-card.status-confirmed:nth-child(3n+2),.schedule-shift-card.status-rejected:nth-child(3n+2){background:#739b98;border-color:transparent}
+.schedule-shift-card.status-confirmed:nth-child(3n),.schedule-shift-card.status-rejected:nth-child(3n){background:#5686b2;border-color:transparent}
+.schedule-shift-card.status-confirmed .schedule-shift-title,.schedule-shift-card.status-confirmed .schedule-shift-time,.schedule-shift-card.status-confirmed .schedule-employee-names,.schedule-shift-card.status-rejected .schedule-shift-title,.schedule-shift-card.status-rejected .schedule-shift-time,.schedule-shift-card.status-rejected .schedule-employee-names{color:#fff}
+.schedule-status-icon{width:24px;height:24px;flex-basis:24px;font-size:19px;box-shadow:0 1px 3px #0002}
+.schedule-tabs{height:calc(67px + env(safe-area-inset-bottom));padding:6px 8px calc(6px + env(safe-area-inset-bottom));border-top:1px solid #edf0f2;box-shadow:0 -3px 12px #1c344008}
+.schedule-tab{font-size:10px;gap:2px;color:#84919d}
+.schedule-tab span{font-size:20px;line-height:23px}
+.schedule-tab.active{color:#168fe5}
+.schedule-fab{width:54px;height:54px;right:16px;bottom:calc(78px + env(safe-area-inset-bottom));border:0;background:#168fe5;color:#fff;box-shadow:0 4px 12px #168fe544;font-size:27px}
+.schedule-empty{margin:12px 10px;padding:36px 20px;border:1px dashed #dfe6eb;border-radius:13px;background:#fafcfd;font-size:13px}
+.availability-row{padding:12px 4px;border-bottom:1px solid #edf0f2}
+@media(max-width:390px){.schedule-shift-list{padding-left:7px;padding-right:10px}.schedule-date-group{grid-template-columns:36px minmax(0,1fr);gap:6px}.schedule-shift-card{padding:11px 10px 10px 12px}.schedule-shift-title{font-size:13px}.schedule-employee-names{font-size:10px}}
