@@ -199,3 +199,26 @@ body{background:#fff;color:#111;font-family:-apple-system,BlinkMacSystemFont,"Se
 .schedule-empty{margin:12px 10px;padding:36px 20px;border:1px dashed #dfe6eb;border-radius:13px;background:#fafcfd;font-size:13px}
 .availability-row{padding:12px 4px;border-bottom:1px solid #edf0f2}
 @media(max-width:390px){.schedule-shift-list{padding-left:7px;padding-right:10px}.schedule-date-group{grid-template-columns:36px minmax(0,1fr);gap:6px}.schedule-shift-card{padding:11px 10px 10px 12px}.schedule-shift-title{font-size:13px}.schedule-employee-names{font-size:10px}}
+
+/* Final Connecteam roster controls and status markers */
+.schedule-shift-card{background:#fff!important;border:1px solid #e6e9ec!important;border-radius:9px!important;box-shadow:none!important;color:#202b36!important;padding:13px 12px 12px 17px!important;min-height:0!important;overflow:visible!important}
+.schedule-shift-card:before{width:4px!important;border-radius:9px 0 0 9px!important;background:#78a79e!important}
+.schedule-shift-card:nth-child(3n+2):before{background:#8ba8c7!important}
+.schedule-shift-card:nth-child(3n):before{background:#a18bb9!important}
+.schedule-shift-title{font-size:14px!important;font-weight:700!important;color:#171b20!important}
+.schedule-shift-time{font-size:12px!important;color:#424b53!important;margin:5px 0 6px!important}
+.schedule-employee-names{font-size:12px!important;line-height:1.35!important;color:#242a30!important;margin:0!important}
+.schedule-card-actions{gap:5px!important;margin-top:9px!important}
+.schedule-card-actions button{height:37px!important;border-radius:22px!important;font-size:14px!important;font-weight:500!important}
+.schedule-reject{background:#fff!important;border:1px solid #d5d9dd!important;color:#303a43!important}
+.schedule-confirm{background:#2789ed!important;border:1px solid #2789ed!important;color:#fff!important}
+.schedule-shift-card.status-confirmed{background:#739b98!important;border-color:#739b98!important;color:#fff!important}
+.schedule-shift-card.status-confirmed:before{background:rgba(0,0,0,.12)!important}
+.schedule-shift-card.status-confirmed .schedule-shift-title,.schedule-shift-card.status-confirmed .schedule-shift-time,.schedule-shift-card.status-confirmed .schedule-employee-names{color:#fff!important}
+.schedule-shift-card.status-rejected{background:#fff!important;border-color:#e3e6e9!important;color:#202b36!important}
+.schedule-shift-card.status-rejected:before{background:#d95b63!important}
+.schedule-shift-card.status-rejected .schedule-shift-title,.schedule-shift-card.status-rejected .schedule-shift-time,.schedule-shift-card.status-rejected .schedule-employee-names{color:#202b36!important}
+.schedule-status-icon{position:absolute!important;left:-11px!important;top:12px!important;z-index:2!important;width:20px!important;height:20px!important;flex-basis:20px!important;display:grid!important;place-items:center!important;border-radius:50%!important;font-size:13px!important;font-weight:800!important;line-height:1!important;box-shadow:none!important;border:1px solid #fff!important}
+.schedule-status-icon.confirmed{background:#72b944!important;color:#fff!important}
+.schedule-status-icon.rejected{background:#df5962!important;color:#fff!important}
+#shiftStatusConfirm.primary{background:#2789ed!important;border-color:#2789ed!important;color:#fff!important}
