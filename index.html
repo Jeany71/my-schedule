@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#173f32">
+  <meta name="theme-color" content="#ffffff">
   <meta name="description" content="A private shared staff scheduling app.">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
@@ -28,20 +28,17 @@
   </div>
 
   <div id="app" class="app-shell hidden">
-    <header class="topbar">
-      <div><div class="eyebrow light">TEAM WORKSPACE</div><div class="top-title">My Schedule</div></div>
-      <button id="signOutBtn" class="avatar-btn" aria-label="Sign out">↗</button>
-    </header>
+    
     <main>
-      <section id="homePage" class="page">
-        <div class="welcome-row"><div><p class="eyebrow">OVERVIEW</p><h1>Good day</h1><p class="muted" id="todayLabel"></p></div><div class="date-orb">✦</div></div>
-        <div class="stats-grid">
-          <article class="stat-card"><span class="stat-label">Team members</span><strong id="employeeCount">0</strong><span class="stat-foot">In your roster</span></article>
-          <article class="stat-card"><span class="stat-label">Upcoming shifts</span><strong id="upcomingCount">0</strong><span class="stat-foot">Next 7 days</span></article>
-        </div>
-        <div class="section-head"><div><p class="eyebrow">COMING UP</p><h2>Next shifts</h2></div><button class="text-btn" data-go="schedule">View all →</button></div>
-        <div id="homeShifts" class="shift-list"></div>
+      <section id="homePage" class="page home-page">
+        <div class="home-greeting"><div class="home-avatar" id="homeAvatar">JL</div><h1>Good afternoon, <span id="homeFirstName">there</span> 👋</h1><div class="greeting-actions"><button class="icon-button" data-go="clock">◉</button><button class="icon-button" data-go="schedule">♧</button></div></div>
+        <div class="quick-links"><button class="quick-link" data-go="schedule"><span class="quick-icon blue">✉</span><span>Updates</span></button><button class="quick-link" data-go="schedule"><span class="quick-icon peach">▣</span><span>Quick Tasks</span></button><button class="quick-link" data-go="clock"><span class="quick-icon pale-blue">◴</span><span>Time Clock</span></button><button class="quick-link" data-go="employees"><span class="quick-icon pink">▤</span><span>Directory</span></button></div>
+        <section class="home-panel timeclock-panel"><div class="panel-heading"><h2>Time Clock</h2><button class="chevron-button" data-go="clock">›</button></div><div class="active-shift"><span class="shift-accent"></span><div><strong id="homeClockShift">Your next shift</strong><p id="homeClockTime">Check your upcoming shifts below</p></div><button class="chevron-button" data-go="schedule">›</button></div><div class="clock-inline"><div class="clock-status-copy"><strong id="clockStatus">You are clocked out</strong><span id="clockInfo">Time entries are saved on this device.</span></div><button id="clockBtn" class="primary clock-start"><span>◉</span> <span id="clockBtnText">Start shift</span></button></div></section>
+        <section class="home-panel upcoming-panel"><div class="panel-heading"><h2>Upcoming Shifts (<span id="upcomingCount">0</span>)</h2></div><div id="homeShifts" class="shift-list"></div><button class="view-all-link" data-go="schedule">View all shifts</button></section>
+        <section class="home-panel weekly-panel"><div class="panel-heading"><h2>Weekly Hours</h2><button class="chevron-button" data-go="schedule">›</button></div><div id="weeklyHours" class="weekly-hours"></div></section>
       </section>
+      <section id="searchPage" class="page hidden search-page"><div class="search-topline"><div class="search-input"><span>⌕</span><span>Search</span></div><button class="search-more">•••</button><button class="search-add" data-go="schedule">＋</button></div><h1>Assets</h1><div class="search-field"><span>Search</span><span>⌕</span></div><h2 class="asset-heading">Communication</h2><div class="asset-list"><button class="asset-card" data-go="chat"><span class="asset-icon turquoise">▢</span>Chat</button><button class="asset-card" data-go="schedule"><span class="asset-icon blue-bg">✉</span>Updates</button><button class="asset-card" data-go="employees"><span class="asset-icon magenta">▤</span>Directory</button><button class="asset-card" data-go="schedule"><span class="asset-icon green-bg">▦</span>Events</button><button class="asset-card" data-go="more"><span class="asset-icon purple">▥</span>Knowledge base</button></div><h2 class="asset-heading">Operations</h2><div class="asset-list"><button class="asset-card" data-go="clock"><span class="asset-icon blue-bg">◴</span>Time Clock</button><button class="asset-card" data-go="schedule"><span class="asset-icon magenta">▤</span>Schedule</button><button class="asset-card" data-go="employees"><span class="asset-icon peach-bg">♙</span>Team</button></div></section>
+      <section id="profilePage" class="page hidden profile-page"><div class="profile-banner"><div class="profile-brand">如意</div><div class="profile-decoration"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="profile-name" id="profileName">My Profile</div><div class="profile-avatar" id="profileAvatar">JL</div><div class="profile-date" id="profileDate"></div></div><div class="profile-section-title"><h2>Time Off</h2><button class="text-btn" data-go="more">View requests</button></div><div class="timeoff-grid"><div>Time Off<strong>∞</strong></div><div>Sick leave<strong>∞</strong></div><div>Unpaid Leave<strong>∞</strong></div></div><h2 class="profile-group-title">Form submissions</h2><button class="profile-row" data-go="more"><span class="row-symbol purple-text">◷</span>My submissions <b>›</b></button><button class="profile-row" data-go="more"><span class="row-symbol turquoise-text">⇩</span>Shared with me <b>›</b></button><h2 class="profile-group-title">More</h2><button class="profile-row" data-go="schedule"><span class="row-symbol blue-text">▥</span>My activity <b>›</b></button><button class="profile-row" data-go="more"><span class="row-symbol blue-text">▢</span>Personal documents <b>›</b></button><button class="profile-row" data-go="more"><span class="row-symbol blue-text">☻</span>Personal information <b>›</b></button><button class="profile-row" data-go="more"><span class="row-symbol blue-text">⚙</span>Settings <b>›</b></button><button class="signout-row" id="signOutBtn">Sign out</button></section>
 
       <section id="schedulePage" class="page hidden">
         <div class="page-heading"><div><p class="eyebrow">PLANNING</p><h1>Schedule</h1></div><button id="addShiftBtn" class="primary">＋ Add shift</button></div>
@@ -60,7 +57,7 @@
 
       <section id="clockPage" class="page hidden">
         <p class="eyebrow">TIME TRACKING</p><h1>Time Clock</h1>
-        <div class="clock-card"><div class="clock-icon">◷</div><h2 id="clockStatus">You are clocked out</h2><p class="muted">Basic time clock preview. Entries are stored on this device in this starter version.</p><button id="clockBtn" class="primary full">Clock in</button><p id="clockInfo" class="tiny muted"></p></div>
+        <div class="clock-card"><div class="clock-icon">◷</div><h2 id="clockStatusLegacy">You are clocked out</h2><p class="muted">Your clock status is shown on the Home screen.</p></div>
       </section>
 
       <section id="chatPage" class="page hidden">
@@ -79,10 +76,9 @@
 
     <nav class="bottom-nav">
       <button class="nav-item active" data-page="home"><span>⌂</span>Home</button>
-      <button class="nav-item" data-page="schedule"><span>▦</span>Schedule</button>
-      <button class="nav-item" data-page="employees"><span>♙</span>Team</button>
-      <button class="nav-item" data-page="clock"><span>◷</span>Clock</button>
-      <button class="nav-item" data-page="more"><span>•••</span>More</button>
+      <button class="nav-item" data-page="search"><span>⌕</span>Search</button>
+      <button class="nav-item" data-page="chat"><span>▱</span>Chat</button>
+      <button class="nav-item" data-page="profile"><span>☻</span>Profile</button>
     </nav>
   </div>
 

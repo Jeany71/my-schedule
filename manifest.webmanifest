@@ -3,8 +3,8 @@
   "short_name": "My Schedule",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#f6f8f6",
-  "theme_color": "#173f32",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
   "icons": [
     {
       "src": "icon.svg",
