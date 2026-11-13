@@ -29,7 +29,14 @@ function demoLoad(){employees=JSON.parse(localStorage.getItem("ms_employees")||"
 function demoSave(){localStorage.setItem("ms_employees",JSON.stringify(employees));localStorage.setItem("ms_shifts",JSON.stringify(shifts));localStorage.setItem("ms_availabilities",JSON.stringify(availabilities))}
 function name(id){return employees.find(x=>x.id===id)?.name||"Unknown"}
 function employeeIds(s){return Array.isArray(s.employeeIds)&&s.employeeIds.length?s.employeeIds:[s.employeeId].filter(Boolean)}
-function isMine(s){const n=employeeIds(s).map(name).join(" ").toLowerCase();return currentUserEmail.startsWith("c93300")?n.includes("jeany"):currentUserEmail.startsWith("quinlay")?n.includes("quinlay"):n.includes(scheduleUserName.toLowerCase())}
+function isMine(s){
+ const assigned=employeeIds(s).map(id=>employees.find(e=>e.id===id)).filter(Boolean);
+ const email=currentUserEmail.toLowerCase();
+ const emailFields=assigned.flatMap(e=>[e.email,e.ownerEmail,e.userEmail]).filter(Boolean).map(x=>String(x).toLowerCase());
+ if(emailFields.length)return emailFields.includes(email);
+ const alias=email.startsWith("c93300")?"jeany":email.startsWith("quinlay")?"quinlay":scheduleUserName.toLowerCase();
+ return assigned.some(e=>String(e.name||"").trim().toLowerCase().split(/\s+/)[0]===alias);
+}
 function selectedAvailability(){return availabilities.filter(a=>(a.ownerEmail||"").toLowerCase()===currentUserEmail)}
 function duration(s){let [a,b]=[s.start,s.end].map(x=>x.split(":").map(Number));let n=b[0]*60+b[1]-a[0]*60-a[1];if(n<0)n+=1440;return n/60}
 function card(s){
@@ -41,7 +48,7 @@ function card(s){
 function empty(s){return `<div class="empty-state"><p class="muted">${s}</p></div>`}
 function render(){
  let limit=new Date();limit.setDate(limit.getDate()+7);
- let up=shifts.filter(s=>s.date>=today()&&s.date<=iso(limit)).sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start));
+ let up=shifts.filter(s=>isMine(s)&&s.date>=today()&&s.date<=iso(limit)).sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start));
  $("upcomingCount").textContent=up.length;$("homeShifts").innerHTML=up.slice(0,3).map(card).join("")||empty("No upcoming shifts yet.");
  let ws=weekStart(),weekDays=Array.from({length:7},(_,i)=>{let d=new Date(ws);d.setDate(d.getDate()+i);return d;});
  const wh=$("weeklyHours"); if(wh) wh.innerHTML=weekDays.map(d=>{let key=iso(d),hrs=shifts.filter(s=>s.date===key).reduce((n,s)=>n+duration(s),0);return `<div class="week-hour ${key===today()?"today":""}">${d.toLocaleDateString([],{weekday:"short"})}<strong>${hrs?hrs.toFixed(1)+"h":"—"}</strong></div>`}).join("");
@@ -100,7 +107,8 @@ function renderSchedule(){
   const unavailable= scheduleFilter==="mine" ? mine.find(a=>a.startDate<=day&&a.endDate>=day) : null;
   const cards=dayGroups.map(g=>{const first=g[0],ids=g.map(x=>x.id),names=[...new Set(g.flatMap(x=>employeeIds(x).map(name)))],initials=(names[0]||"?").split(/\s+/).map(x=>x[0]||"").join("").slice(0,2).toUpperCase(),status=first.status||"pending",hours=duration(first),durationText=Number.isInteger(hours)?hours+"h":hours.toFixed(1)+"h";return `<article class="schedule-shift-card status-${status}" data-edit="${esc(first.id)}"><div class="schedule-shift-head"><strong class="schedule-shift-title">${esc(first.role||"Shift")}</strong><div class="schedule-avatars"><span class="schedule-avatar">${esc(initials)}</span>${names.length>1?`<span class="schedule-avatar-more">+${names.length-1}</span>`:""}</div></div><div class="schedule-shift-time">${time(first.start)} – ${time(first.end)} (${durationText})</div><p class="schedule-employee-names">${names.map(esc).join(",\n")}</p>${status!=="pending"?`<span class="schedule-status-icon ${status}" aria-label="${status==="confirmed"?"Confirmed":"Rejected"}">${status==="confirmed"?"✓":"×"}</span>`:`<div class="schedule-card-actions"><button class="schedule-reject" data-shift-status="rejected" data-shift-ids="${ids.join(",")}">Reject</button><button class="schedule-confirm" data-shift-status="confirmed" data-shift-ids="${ids.join(",")}">Confirm</button></div>`}</article>`}).join("");
   const availability=unavailable?`<div class="schedule-unavailable"><span>Unavailable</span><b>${unavailable.allDay?"All day":`${time(unavailable.startTime||"09:00")} – ${time(unavailable.endTime||"17:00")}`}</b>${unavailable.note?`<small>${esc(unavailable.note)}</small>`:""}</div>`:"";
-  return `<section class="schedule-date-group"><div class="schedule-date-label"><strong>${d.getDate()}</strong><span>${d.toLocaleDateString([],{weekday:"short"})}</span></div><div class="schedule-day-content"><div class="schedule-cards">${cards}</div>${availability}<button class="schedule-add-day" data-schedule-add="${day}">＋ Add</button></div></section>`;
+  const addButton=shifts.some(s=>s.date===day)?"":`<button class="schedule-add-day" data-schedule-add="${day}">＋ Add</button>`;
+  return `<section class="schedule-date-group"><div class="schedule-date-label"><strong>${d.getDate()}</strong><span>${d.toLocaleDateString([],{weekday:"short"})}</span></div><div class="schedule-day-content"><div class="schedule-cards">${cards}</div>${availability}${addButton}</div></section>`;
  }).join("");
 }
 
