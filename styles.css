@@ -242,3 +242,23 @@ body{background:#fff;color:#111;font-family:-apple-system,BlinkMacSystemFont,"Se
 #schedulePage .schedule-status-icon.rejected{background:#df5962!important;color:#fff!important}
 #shiftStatusConfirm.primary{background:#2789ed!important;border-color:#2789ed!important;color:#fff!important}
 @media(max-width:390px){#schedulePage .schedule-shift-card{padding:11px 10px 10px 14px!important}#schedulePage .schedule-shift-title{font-size:13px!important}#schedulePage .schedule-employee-names{font-size:11px!important}}
+
+
+/* Continuous date timeline and availability markers */
+#schedulePage .schedule-shift-list{gap:0!important;padding-top:7px!important}
+#schedulePage .schedule-date-group{padding:9px 0 13px!important;border-bottom:1px solid #f0f2f4;align-items:start!important}
+#schedulePage .schedule-date-label{padding-top:5px!important;text-align:center}
+#schedulePage .schedule-date-label strong{font-size:21px!important;color:#657786!important}
+#schedulePage .schedule-date-label span{display:block;font-size:11px!important}
+#schedulePage .schedule-day-content{min-width:0;display:flex;flex-direction:column;gap:7px}
+#schedulePage .schedule-add-day{align-self:flex-start;border:0;background:transparent;color:#168fe5;font-size:12px;font-weight:600;padding:4px 2px;min-height:25px}
+#schedulePage .schedule-cards:empty{display:none}
+#schedulePage .schedule-unavailable{display:flex;align-items:center;gap:7px;flex-wrap:wrap;background:#fbe8eb;border-radius:6px;padding:6px 9px;color:#bd5260;font-size:11px;line-height:1.3}
+#schedulePage .schedule-unavailable span{font-weight:700}
+#schedulePage .schedule-unavailable b{font-weight:500;color:#a84b59}
+#schedulePage .schedule-unavailable small{width:100%;color:#a45b65}
+#schedulePage .availability-row.is-unavailable .availability-copy{background:#fbe8eb;border-radius:6px;padding:7px 9px;color:#b94f5d}
+#schedulePage .availability-row.is-unavailable .availability-copy strong{color:#b94f5d}
+#schedulePage .availability-row.is-available .availability-copy strong{color:#7d8994;font-weight:500}
+#schedulePage .availability-copy small{display:block;margin-top:3px;font-size:11px}
+@media(max-width:390px){#schedulePage .schedule-date-group{grid-template-columns:36px minmax(0,1fr)!important}}
