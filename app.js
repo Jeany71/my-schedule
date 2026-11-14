@@ -145,7 +145,10 @@ function renderSchedule(){
   // Only me results); the full shared shifts check also catches shifts assigned
   // to other employees or hidden by the current search/filter.
   const hasAnyShiftOnDay=dayGroups.length>0 || shifts.some(shift=>shiftDateKey(shift.date)===day);
-  const addButton=scheduleFilter==="mine" && !hasAnyShiftOnDay
+  // Only show the per-day Add shortcut on a truly empty, available day.
+  // A day marked Unavailable (or Time off) must not offer another Add action.
+  const hasUnavailableOnDay=Boolean(unavailable);
+  const addButton=scheduleFilter==="mine" && !hasAnyShiftOnDay && !hasUnavailableOnDay
    ? `<button type="button" class="schedule-add-day" data-schedule-add="${day}">＋ Add</button>`
    : "";
   return `<section class="schedule-date-group"><div class="schedule-date-label"><strong>${d.getDate()}</strong><span>${d.toLocaleDateString([],{weekday:"short"})}</span></div><div class="schedule-day-content"><div class="schedule-cards">${cards}</div>${availability}${addButton}</div></section>`;

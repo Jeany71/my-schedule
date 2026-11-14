@@ -1,4 +1,4 @@
-const CACHE = "my-schedule-v20";
+const CACHE = "my-schedule-v21";
 const CORE = ["./", "./index.html", "./styles.css", "./app.js", "./manifest.webmanifest", "./icon.svg"];
 
 self.addEventListener("install", event => {
