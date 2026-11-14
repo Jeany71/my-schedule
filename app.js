@@ -140,10 +140,12 @@ function renderSchedule(){
   const unavailable= scheduleFilter==="mine" ? mine.find(a=>a.startDate<=day&&a.endDate>=day) : null;
   const cards=dayGroups.map(g=>{const first=g[0],ids=g.map(x=>x.id),names=[...new Set(g.flatMap(x=>employeeIds(x).map(name)))],initials=(names[0]||"?").split(/\s+/).map(x=>x[0]||"").join("").slice(0,2).toUpperCase(),status=first.status||"pending",hours=duration(first),durationText=Number.isInteger(hours)?hours+"h":hours.toFixed(1)+"h";return `<article class="schedule-shift-card status-${status}" data-edit="${esc(first.id)}"><div class="schedule-shift-head"><strong class="schedule-shift-title">${esc(first.role||"Shift")}</strong><div class="schedule-avatars"><span class="schedule-avatar">${esc(initials)}</span>${names.length>1?`<span class="schedule-avatar-more">+${names.length-1}</span>`:""}</div></div><div class="schedule-shift-time">${time(first.start)} – ${time(first.end)} (${durationText})</div><p class="schedule-employee-names">${names.map(esc).join(",\n")}</p>${status!=="pending"?`<span class="schedule-status-icon ${status}" aria-label="${status==="confirmed"?"Confirmed":"Rejected"}">${status==="confirmed"?"✓":"×"}</span>`:`<div class="schedule-card-actions"><button class="schedule-reject" data-shift-status="rejected" data-shift-ids="${ids.join(",")}">Reject</button><button class="schedule-confirm" data-shift-status="confirmed" data-shift-ids="${ids.join(",")}">Confirm</button></div>`}</article>`}).join("");
   const availability=unavailable?`<div class="schedule-unavailable"><span>Unavailable</span><b>${unavailable.allDay?"All day":`${time(unavailable.startTime||"09:00")} – ${time(unavailable.endTime||"17:00")}`}</b>${unavailable.note?`<small>${esc(unavailable.note)}</small>`:""}</div>`:"";
-  // In the Only me view, show a per-day Add shortcut only when the
-  // current user's filtered shift list has no shift on that date.
-  // Other employees' shifts must not hide the current user's Add shortcut.
-  const addButton=scheduleFilter==="mine" && dayGroups.length===0
+  // The per-day Add shortcut is available in Only me only when the date
+  // has absolutely no shift assigned to anyone. Check the complete shared
+  // shifts collection (not the Only me/search-filtered list), and normalize
+  // Firestore date values through shiftDateKey so date formats cannot bypass it.
+  const hasAnyShiftOnDay=shifts.some(shift=>shiftDateKey(shift.date)===day);
+  const addButton=scheduleFilter==="mine" && !hasAnyShiftOnDay
    ? `<button type="button" class="schedule-add-day" data-schedule-add="${day}">＋ Add</button>`
    : "";
   return `<section class="schedule-date-group"><div class="schedule-date-label"><strong>${d.getDate()}</strong><span>${d.toLocaleDateString([],{weekday:"short"})}</span></div><div class="schedule-day-content"><div class="schedule-cards">${cards}</div>${availability}${addButton}</div></section>`;
