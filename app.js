@@ -133,7 +133,7 @@ function renderSchedule(){
   const availability=unavailable?`<div class="schedule-unavailable"><span>Unavailable</span><b>${unavailable.allDay?"All day":`${time(unavailable.startTime||"09:00")} – ${time(unavailable.endTime||"17:00")}`}</b>${unavailable.note?`<small>${esc(unavailable.note)}</small>`:""}</div>`:"";
   // Show the inline Add shortcut only when the date has no shift at all.
   // Additional shifts can still be created from the main Add Shift action.
-  const hasAnyShiftOnDay=shifts.some(s=>s.date===day);
+  const hasAnyShiftOnDay=dayGroups.length>0 || shifts.some(s=>String(s.date||"").slice(0,10)===day);
   const addButton=hasAnyShiftOnDay?"":`<button class="schedule-add-day" data-schedule-add="${day}">＋ Add</button>`;
   return `<section class="schedule-date-group"><div class="schedule-date-label"><strong>${d.getDate()}</strong><span>${d.toLocaleDateString([],{weekday:"short"})}</span></div><div class="schedule-day-content"><div class="schedule-cards">${cards}</div>${availability}${addButton}</div></section>`;
  }).join("");
