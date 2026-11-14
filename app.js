@@ -29,13 +29,25 @@ function demoLoad(){employees=JSON.parse(localStorage.getItem("ms_employees")||"
 function demoSave(){localStorage.setItem("ms_employees",JSON.stringify(employees));localStorage.setItem("ms_shifts",JSON.stringify(shifts));localStorage.setItem("ms_availabilities",JSON.stringify(availabilities))}
 function name(id){return employees.find(x=>x.id===id)?.name||"Unknown"}
 function employeeIds(s){return Array.isArray(s.employeeIds)&&s.employeeIds.length?s.employeeIds:[s.employeeId].filter(Boolean)}
+function currentEmployeeIdentity(){
+ const email=currentUserEmail.trim().toLowerCase();
+ if(email==="c93300@gmail.com")return {email,fullName:"jeany lin",firstName:"jeany"};
+ if(email==="quinlay.lu@gmail.com")return {email,fullName:"ethan lyu",firstName:"ethan"};
+ const fallback=scheduleUserName.trim().toLowerCase().replace(/\s+/g," ");
+ return {email,fullName:fallback,firstName:fallback.split(/\s+/)[0]||""};
+}
 function isMine(s){
+ const identity=currentEmployeeIdentity();
  const assigned=employeeIds(s).map(id=>employees.find(e=>e.id===id)).filter(Boolean);
- const email=currentUserEmail.toLowerCase();
- const emailFields=assigned.flatMap(e=>[e.email,e.ownerEmail,e.userEmail]).filter(Boolean).map(x=>String(x).toLowerCase());
- if(emailFields.length)return emailFields.includes(email);
- const alias=email.startsWith("c93300")?"jeany":email.startsWith("quinlay")?"quinlay":scheduleUserName.toLowerCase();
- return assigned.some(e=>String(e.name||"").trim().toLowerCase().split(/\s+/)[0]===alias);
+ return assigned.some(employee=>{
+  const employeeEmails=[employee.email,employee.ownerEmail,employee.userEmail]
+   .filter(Boolean).map(value=>String(value).trim().toLowerCase());
+  if(employeeEmails.length)return employeeEmails.includes(identity.email);
+  const employeeName=String(employee.name||"").trim().toLowerCase().replace(/\s+/g," ");
+  // Employees are roster-only records, so map the signed-in account to its
+  // canonical Directory name. Keep first-name matching for legacy records.
+  return employeeName===identity.fullName || employeeName===identity.firstName;
+ });
 }
 function selectedAvailability(){return availabilities.filter(a=>(a.ownerEmail||"").toLowerCase()===currentUserEmail)}
 function duration(s){let [a,b]=[s.start,s.end].map(x=>x.split(":").map(Number));let n=b[0]*60+b[1]-a[0]*60-a[1];if(n<0)n+=1440;return n/60}
@@ -107,7 +119,8 @@ function renderSchedule(){
   const unavailable= scheduleFilter==="mine" ? mine.find(a=>a.startDate<=day&&a.endDate>=day) : null;
   const cards=dayGroups.map(g=>{const first=g[0],ids=g.map(x=>x.id),names=[...new Set(g.flatMap(x=>employeeIds(x).map(name)))],initials=(names[0]||"?").split(/\s+/).map(x=>x[0]||"").join("").slice(0,2).toUpperCase(),status=first.status||"pending",hours=duration(first),durationText=Number.isInteger(hours)?hours+"h":hours.toFixed(1)+"h";return `<article class="schedule-shift-card status-${status}" data-edit="${esc(first.id)}"><div class="schedule-shift-head"><strong class="schedule-shift-title">${esc(first.role||"Shift")}</strong><div class="schedule-avatars"><span class="schedule-avatar">${esc(initials)}</span>${names.length>1?`<span class="schedule-avatar-more">+${names.length-1}</span>`:""}</div></div><div class="schedule-shift-time">${time(first.start)} – ${time(first.end)} (${durationText})</div><p class="schedule-employee-names">${names.map(esc).join(",\n")}</p>${status!=="pending"?`<span class="schedule-status-icon ${status}" aria-label="${status==="confirmed"?"Confirmed":"Rejected"}">${status==="confirmed"?"✓":"×"}</span>`:`<div class="schedule-card-actions"><button class="schedule-reject" data-shift-status="rejected" data-shift-ids="${ids.join(",")}">Reject</button><button class="schedule-confirm" data-shift-status="confirmed" data-shift-ids="${ids.join(",")}">Confirm</button></div>`}</article>`}).join("");
   const availability=unavailable?`<div class="schedule-unavailable"><span>Unavailable</span><b>${unavailable.allDay?"All day":`${time(unavailable.startTime||"09:00")} – ${time(unavailable.endTime||"17:00")}`}</b>${unavailable.note?`<small>${esc(unavailable.note)}</small>`:""}</div>`:"";
-  const addButton=shifts.some(s=>s.date===day)?"":`<button class="schedule-add-day" data-schedule-add="${day}">＋ Add</button>`;
+  const hasShiftOnDate=shifts.some(s=>String(s.date||"").slice(0,10)===day);
+  const addButton=(dayGroups.length||hasShiftOnDate)?"":`<button class="schedule-add-day" data-schedule-add="${day}">＋ Add</button>`;
   return `<section class="schedule-date-group"><div class="schedule-date-label"><strong>${d.getDate()}</strong><span>${d.toLocaleDateString([],{weekday:"short"})}</span></div><div class="schedule-day-content"><div class="schedule-cards">${cards}</div>${availability}${addButton}</div></section>`;
  }).join("");
 }
@@ -134,8 +147,8 @@ function openShift(s=null){$("shiftForm").reset();$("shiftId").value=s?.id||"";$
 function showPage(p){document.querySelectorAll(".page").forEach(x=>x.classList.add("hidden"));$(`${p}Page`).classList.remove("hidden");$("app").classList.toggle("schedule-open",p==="schedule");document.querySelectorAll(".nav-item").forEach(x=>x.classList.toggle("active",x.dataset.page===p))}
 function clockRender(){let active=!!clockIn;const status=$("clockStatus");if(status)status.textContent=active?"You are clocked in":"You are clocked out";const legacy=$("clockStatusLegacy");if(legacy)legacy.textContent=active?"You are clocked in":"You are clocked out";const btn=$("clockBtn");if(btn){const label=$("clockBtnText");if(label)label.textContent=active?"End shift":"Start shift";else btn.textContent=active?"Clock out":"Clock in";}const info=$("clockInfo");if(info)info.textContent=active?`Started ${new Date(clockIn).toLocaleString()}`:"Time entries are saved on this device."}
 function start(user){
- const email=(user.email||"").toLowerCase();currentUserEmail=email;const first=email.startsWith("c93300")?"Jeany":email.startsWith("quinlay")?"Quinlay":(email.split("@")[0]||"there");scheduleUserName=first;
- const initials=first.slice(0,2).toUpperCase();["homeAvatar","profileAvatar"].forEach(id=>{if($(id))$(id).textContent=initials});if($("homeFirstName"))$("homeFirstName").textContent=first;if($("profileName"))$("profileName").textContent=first+" "+(email.startsWith("c93300")?"Lin":"");if($("profileDate"))$("profileDate").textContent=new Date().toLocaleDateString([],{day:"2-digit",month:"2-digit",year:"numeric"});
+ const email=(user.email||"").trim().toLowerCase();currentUserEmail=email;const first=email==="c93300@gmail.com"?"Jeany":email==="quinlay.lu@gmail.com"?"Ethan":(email.split("@")[0]||"there");const displayName=email==="c93300@gmail.com"?"Jeany Lin":email==="quinlay.lu@gmail.com"?"Ethan Lyu":first;scheduleUserName=displayName;
+ const initials=first.slice(0,2).toUpperCase();["homeAvatar","profileAvatar"].forEach(id=>{if($(id))$(id).textContent=initials});if($("homeFirstName"))$("homeFirstName").textContent=first;if($("profileName"))$("profileName").textContent=displayName;if($("profileDate"))$("profileDate").textContent=new Date().toLocaleDateString([],{day:"2-digit",month:"2-digit",year:"numeric"});
  $("authScreen").classList.add("hidden");$("app").classList.remove("hidden");$("signedInEmail").textContent=user.email||"Demo preview";$("dataMode").textContent=DEMO_MODE?"Local demo — not shared between phones":"Firebase cloud sync";
  if(DEMO_MODE){demoLoad();render()}else{let p=`workspaces/${WORKSPACE_ID}`;unsubE?.();unsubS?.();unsubA?.();unsubA=onSnapshot(collection(db,p,"availability"),s=>{availabilities=s.docs.map(d=>({id:d.id,...d.data()}));if(scheduleFilter==="availability")renderSchedule()});unsubE=onSnapshot(collection(db,p,"employees"),s=>{employees=s.docs.map(d=>({id:d.id,...d.data()}));render()});unsubS=onSnapshot(collection(db,p,"shifts"),s=>{shifts=s.docs.map(d=>({id:d.id,...d.data()}));render()})}
 }
