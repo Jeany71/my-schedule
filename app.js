@@ -108,10 +108,22 @@ function renderSchedule(){
  if(scheduleFilter==="mine")list=list.filter(isMine);
  if(q)list=list.filter(s=>(s.role||"Shift").toLowerCase().includes(q)||employeeIds(s).map(name).join(" ").toLowerCase().includes(q)||(s.location||"").toLowerCase().includes(q));
  list.sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start));
+ // Each distinct time slot is its own shift card. Records that represent
+ // the same slot for multiple employees stay together, while morning and
+ // afternoon shifts on the same date remain separate cards.
  const groups=new Map();
- for(const s of list){const k=[s.date,s.role||"Shift",s.start,s.end,s.location||""].join("|");if(!groups.has(k))groups.set(k,[]);groups.get(k).push(s)}
+ for(const s of list){
+  const k=[s.date,s.start,s.end,s.role||"Shift",s.location||"",s.status||"pending"].join("|");
+  if(!groups.has(k))groups.set(k,[]);
+  groups.get(k).push(s);
+ }
  const byDay=new Map();
- for(const group of groups.values()){const day=group[0].date;if(!byDay.has(day))byDay.set(day,[]);byDay.get(day).push(group)}
+ for(const group of groups.values()){
+  const day=group[0].date;
+  if(!byDay.has(day))byDay.set(day,[]);
+  byDay.get(day).push(group);
+ }
+ for(const dayGroups of byDay.values())dayGroups.sort((a,b)=>(a[0].start||"").localeCompare(b[0].start||""));
  const mine=selectedAvailability();
  const days=[];for(let d=new Date(rangeStart);d<=rangeEnd;d.setDate(d.getDate()+1))days.push(iso(d));
  host.innerHTML=days.map(day=>{
@@ -119,8 +131,9 @@ function renderSchedule(){
   const unavailable= scheduleFilter==="mine" ? mine.find(a=>a.startDate<=day&&a.endDate>=day) : null;
   const cards=dayGroups.map(g=>{const first=g[0],ids=g.map(x=>x.id),names=[...new Set(g.flatMap(x=>employeeIds(x).map(name)))],initials=(names[0]||"?").split(/\s+/).map(x=>x[0]||"").join("").slice(0,2).toUpperCase(),status=first.status||"pending",hours=duration(first),durationText=Number.isInteger(hours)?hours+"h":hours.toFixed(1)+"h";return `<article class="schedule-shift-card status-${status}" data-edit="${esc(first.id)}"><div class="schedule-shift-head"><strong class="schedule-shift-title">${esc(first.role||"Shift")}</strong><div class="schedule-avatars"><span class="schedule-avatar">${esc(initials)}</span>${names.length>1?`<span class="schedule-avatar-more">+${names.length-1}</span>`:""}</div></div><div class="schedule-shift-time">${time(first.start)} – ${time(first.end)} (${durationText})</div><p class="schedule-employee-names">${names.map(esc).join(",\n")}</p>${status!=="pending"?`<span class="schedule-status-icon ${status}" aria-label="${status==="confirmed"?"Confirmed":"Rejected"}">${status==="confirmed"?"✓":"×"}</span>`:`<div class="schedule-card-actions"><button class="schedule-reject" data-shift-status="rejected" data-shift-ids="${ids.join(",")}">Reject</button><button class="schedule-confirm" data-shift-status="confirmed" data-shift-ids="${ids.join(",")}">Confirm</button></div>`}</article>`}).join("");
   const availability=unavailable?`<div class="schedule-unavailable"><span>Unavailable</span><b>${unavailable.allDay?"All day":`${time(unavailable.startTime||"09:00")} – ${time(unavailable.endTime||"17:00")}`}</b>${unavailable.note?`<small>${esc(unavailable.note)}</small>`:""}</div>`:"";
-  const hasShiftOnDate=shifts.some(s=>String(s.date||"").slice(0,10)===day);
-  const addButton=(dayGroups.length||hasShiftOnDate)?"":`<button class="schedule-add-day" data-schedule-add="${day}">＋ Add</button>`;
+  // Keep Add available even when this date already has shifts: a day may
+  // contain multiple separate shifts (for example, morning and afternoon).
+  const addButton=`<button class="schedule-add-day" data-schedule-add="${day}">＋ Add</button>`;
   return `<section class="schedule-date-group"><div class="schedule-date-label"><strong>${d.getDate()}</strong><span>${d.toLocaleDateString([],{weekday:"short"})}</span></div><div class="schedule-day-content"><div class="schedule-cards">${cards}</div>${availability}${addButton}</div></section>`;
  }).join("");
 }
