@@ -45,10 +45,19 @@
           <button class="schedule-back" data-page="home" aria-label="Back">‹</button>
           <div class="schedule-company">RU YI DIM SUM</div>
           <div class="schedule-tools">
-            <button id="scheduleToday" aria-label="Today" title="Today">▣</button>
-            <button id="scheduleMonthToggle" aria-label="Switch calendar view" title="Month view">▦</button><button id="scheduleCompact" aria-label="Compact view" title="Compact view">☷</button>
-            <button id="scheduleSearchToggle" aria-label="Search shifts" title="Search">⌕</button>
-            <button id="scheduleSettings" aria-label="Schedule settings" title="Settings">⚙</button>
+            <button id="scheduleToday" class="hidden" aria-label="Today" title="Today" tabindex="-1">Today</button>
+            <button id="scheduleMonthToggle" aria-label="Switch calendar view" title="Calendar view">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="16" rx="2"/><path d="M7.5 3v4M16.5 3v4M4 9.5h16M8 13h.01"/></svg>
+            </button>
+            <button id="scheduleCompact" aria-label="Compact view" title="Display options">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.4-6.5 9.5-6.5 9.5 6.5 9.5 6.5-3.4 6.5-9.5 6.5S2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+            <button id="scheduleSearchToggle" aria-label="Search shifts" title="Search">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="7"/><path d="m16 16 5 5"/></svg>
+            </button>
+            <button id="scheduleSettings" aria-label="Schedule settings" title="Settings">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/><path d="m19.4 13.5 1.1.9-1.1 1.9-1.4-.5a7.9 7.9 0 0 1-1.5.9l-.2 1.5h-2.2l-.4-1.4a7.9 7.9 0 0 1-1.7 0l-.8 1.2-2-.8.2-1.5a7.9 7.9 0 0 1-1.2-1.3l-1.5.1-.7-2.1 1.2-.8a7.9 7.9 0 0 1-.1-1.7L6 8.6l.9-2 1.5.3a7.9 7.9 0 0 1 1.4-1.1l.1-1.5 2.2-.5.7 1.3a7.9 7.9 0 0 1 1.7.2l1-1.1 1.9 1.1-.4 1.5a7.9 7.9 0 0 1 1 1.4l1.5.2.4 2.2-1.3.6a7.9 7.9 0 0 1-.2 1.7Z"/></svg>
+            </button>
           </div>
         </header>
         <div id="scheduleSearchBox" class="schedule-search hidden"><input id="scheduleSearch" type="search" placeholder="Search shifts or employees"></div>
@@ -57,9 +66,9 @@
         <div id="allShifts" class="schedule-shift-list"></div>
         <button id="addShiftBtn" class="schedule-fab" aria-label="Add shift">＋</button>
         <nav class="schedule-tabs" aria-label="Schedule views">
-          <button class="schedule-tab active" data-schedule-filter="mine"><span>♙</span>Only me</button>
-          <button class="schedule-tab" data-schedule-filter="everyone"><span>♧</span>Everyone</button>
-          <button class="schedule-tab" data-schedule-filter="availability"><span>⊙</span>My availability</button>
+          <button class="schedule-tab active" data-schedule-filter="mine"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7.5" r="3.5"/><path d="M4.5 21v-2.2a7.5 7.5 0 0 1 15 0V21"/></svg><span>Only me</span></button>
+          <button class="schedule-tab" data-schedule-filter="everyone"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="7.5" r="3.2"/><path d="M2.5 20v-1.6a6.5 6.5 0 0 1 13 0V20M16 4.8a3.1 3.1 0 0 1 0 5.9M18 13.5a5.7 5.7 0 0 1 3.5 5.2V20"/></svg><span>Everyone</span></button>
+          <button class="schedule-tab" data-schedule-filter="availability"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.3 2.3 4.8-5"/></svg><span>My availability</span></button>
         </nav>
       </section>
 

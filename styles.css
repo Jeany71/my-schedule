@@ -265,3 +265,15 @@ body{background:#fff;color:#111;font-family:-apple-system,BlinkMacSystemFont,"Se
 
 /* Per-day Add is rendered only for empty dates in the Only me view. */
 #schedulePage #allShifts .schedule-add-day{display:inline-flex;align-items:center;}
+
+
+/* Reference-matched schedule toolbar and bottom tabs */
+.schedule-tools{display:flex;align-items:center;gap:17px}
+.schedule-tools button{width:29px;height:34px;padding:2px;background:transparent;color:#168fe5;display:grid;place-items:center;border:0}
+.schedule-tools button svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.schedule-tools button:active{opacity:.65}
+.schedule-tabs{display:flex;align-items:center;justify-content:space-around;gap:0}
+.schedule-tab{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:9px 3px 7px;background:#fff;color:#555;font-size:12px;font-weight:400;white-space:nowrap}
+.schedule-tab svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.schedule-tab.active{color:#2996f5;font-weight:600}
+@media(max-width:380px){.schedule-tools{gap:12px}.schedule-tools button{width:26px}.schedule-tab{font-size:11px}}
