@@ -281,3 +281,9 @@ body{background:#fff;color:#111;font-family:-apple-system,BlinkMacSystemFont,"Se
 /* v23: refine bottom navigation icon scale and toolbar gear alignment */
 .schedule-tab svg{width:19px;height:19px;stroke-width:1.8}
 .schedule-tools button[aria-label="Schedule settings"] svg{width:25px;height:25px;transform:none;transform-origin:50% 50%}
+
+
+/* v24: reduce bottom navigation label size to match the reference */
+.schedule-tab{font-size:10px;line-height:1.2;gap:4px}
+.schedule-tab.active{font-size:10px}
+@media(max-width:380px){.schedule-tab{font-size:9px}.schedule-tab.active{font-size:9px}}
