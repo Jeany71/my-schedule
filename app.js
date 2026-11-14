@@ -22,6 +22,15 @@ let selectedScheduleDate=today(), scheduleFilter="mine", scheduleCompact=false, 
 let clockIn=localStorage.getItem("ms_clock_in")||"";
 const $=id=>document.getElementById(id);
 const date=s=>new Date(`${s}T12:00:00`);
+function shiftDateKey(value){
+ if(value&&typeof value.toDate==="function")value=value.toDate();
+ if(value instanceof Date&&!Number.isNaN(value.getTime()))return iso(value);
+ const raw=String(value??"").trim();
+ const match=raw.match(/^(\d{4}-\d{2}-\d{2})/);
+ if(match)return match[1];
+ const parsed=new Date(raw);
+ return Number.isNaN(parsed.getTime())?"":iso(parsed);
+}
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const time=s=>{const [h,m]=s.split(":").map(Number),d=new Date();d.setHours(h,m);return d.toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})};
 function toast(s){$("toast").textContent=s;$("toast").classList.add("show");setTimeout(()=>$("toast").classList.remove("show"),2100)}
@@ -103,11 +112,11 @@ function renderSchedule(){
   rangeStart=date(selectedScheduleDate);
   rangeEnd=new Date(rangeStart);rangeEnd.setDate(rangeEnd.getDate()+27);
  }
- let list=shifts.filter(s=>s.date>=iso(rangeStart)&&s.date<=iso(rangeEnd));
+ let list=shifts.filter(s=>shiftDateKey(s.date)>=iso(rangeStart)&&shiftDateKey(s.date)<=iso(rangeEnd));
  const q=($("scheduleSearch")?.value||"").trim().toLowerCase();
  if(scheduleFilter==="mine")list=list.filter(isMine);
  if(q)list=list.filter(s=>(s.role||"Shift").toLowerCase().includes(q)||employeeIds(s).map(name).join(" ").toLowerCase().includes(q)||(s.location||"").toLowerCase().includes(q));
- list.sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start));
+ list.sort((a,b)=>(shiftDateKey(a.date)+a.start).localeCompare(shiftDateKey(b.date)+b.start));
  // Each distinct time slot is its own shift card. Records that represent
  // the same slot for multiple employees stay together, while morning and
  // afternoon shifts on the same date remain separate cards.
@@ -119,7 +128,7 @@ function renderSchedule(){
  }
  const byDay=new Map();
  for(const group of groups.values()){
-  const day=group[0].date;
+  const day=shiftDateKey(group[0].date);
   if(!byDay.has(day))byDay.set(day,[]);
   byDay.get(day).push(group);
  }
@@ -133,7 +142,7 @@ function renderSchedule(){
   const availability=unavailable?`<div class="schedule-unavailable"><span>Unavailable</span><b>${unavailable.allDay?"All day":`${time(unavailable.startTime||"09:00")} – ${time(unavailable.endTime||"17:00")}`}</b>${unavailable.note?`<small>${esc(unavailable.note)}</small>`:""}</div>`:"";
   // Show the inline Add shortcut only when the date has no shift at all.
   // Additional shifts can still be created from the main Add Shift action.
-  const hasAnyShiftOnDay=dayGroups.length>0 || shifts.some(s=>String(s.date||"").slice(0,10)===day);
+  const hasAnyShiftOnDay=shifts.some(s=>shiftDateKey(s.date)===day);
   const addButton=hasAnyShiftOnDay?"":`<button class="schedule-add-day" data-schedule-add="${day}">＋ Add</button>`;
   return `<section class="schedule-date-group"><div class="schedule-date-label"><strong>${d.getDate()}</strong><span>${d.toLocaleDateString([],{weekday:"short"})}</span></div><div class="schedule-day-content"><div class="schedule-cards">${cards}</div>${availability}${addButton}</div></section>`;
  }).join("");
@@ -157,7 +166,7 @@ function openAvailability(kind="unavailable",day=today()){
 async function add(type,data){if(DEMO_MODE){data.id=crypto.randomUUID();(type==="employees"?employees:type==="availability"?availabilities:shifts).push(data);demoSave();render()}else return addDoc(collection(db,`workspaces/${WORKSPACE_ID}/${type}`),data)}
 async function update(type,id,data){if(DEMO_MODE){Object.assign((type==="employees"?employees:shifts).find(x=>x.id===id),data);demoSave();render()}else await updateDoc(doc(db,`workspaces/${WORKSPACE_ID}/${type}`,id),data)}
 async function remove(type,id){if(DEMO_MODE){if(type==="shifts")shifts=shifts.filter(x=>x.id!==id);else employees=employees.filter(x=>x.id!==id);demoSave();render()}else await deleteDoc(doc(db,`workspaces/${WORKSPACE_ID}/${type}`,id))}
-function openShift(s=null){$("shiftForm").reset();$("shiftId").value=s?.id||"";$("shiftDialogTitle").textContent=s?"Edit shift":"Add shift";$("deleteShiftBtn").classList.toggle("hidden",!s);$("shiftEmployeeList").innerHTML=employees.map(e=>`<label class="employee-check"><input type="checkbox" name="shiftEmployees" value="${esc(e.id)}"><span>${esc(e.name)}</span></label>`).join("");$("shiftDate").value=s?.date||today();$("shiftStart").value=s?.start||"09:00";$("shiftEnd").value=s?.end||"17:00";$("shiftRole").value=s?.role||"";$("shiftLocation").value=s?.location||"";$("shiftNotes").value=s?.notes||"";if(s){const chosen=employeeIds(s);document.querySelectorAll('input[name="shiftEmployees"]').forEach(c=>c.checked=chosen.includes(c.value));}$("shiftError").textContent="";$("shiftDialog").showModal()}
+function openShift(s=null){$("shiftForm").reset();$("shiftId").value=s?.id||"";$("shiftDialogTitle").textContent=s?"Edit shift":"Add shift";$("deleteShiftBtn").classList.toggle("hidden",!s);$("shiftEmployeeList").innerHTML=employees.map(e=>`<label class="employee-check"><input type="checkbox" name="shiftEmployees" value="${esc(e.id)}"><span>${esc(e.name)}</span></label>`).join("");$("shiftDate").value=s?shiftDateKey(s.date):today();$("shiftStart").value=s?.start||"09:00";$("shiftEnd").value=s?.end||"17:00";$("shiftRole").value=s?.role||"";$("shiftLocation").value=s?.location||"";$("shiftNotes").value=s?.notes||"";if(s){const chosen=employeeIds(s);document.querySelectorAll('input[name="shiftEmployees"]').forEach(c=>c.checked=chosen.includes(c.value));}$("shiftError").textContent="";$("shiftDialog").showModal()}
 function showPage(p){document.querySelectorAll(".page").forEach(x=>x.classList.add("hidden"));$(`${p}Page`).classList.remove("hidden");$("app").classList.toggle("schedule-open",p==="schedule");document.querySelectorAll(".nav-item").forEach(x=>x.classList.toggle("active",x.dataset.page===p))}
 function clockRender(){let active=!!clockIn;const status=$("clockStatus");if(status)status.textContent=active?"You are clocked in":"You are clocked out";const legacy=$("clockStatusLegacy");if(legacy)legacy.textContent=active?"You are clocked in":"You are clocked out";const btn=$("clockBtn");if(btn){const label=$("clockBtnText");if(label)label.textContent=active?"End shift":"Start shift";else btn.textContent=active?"Clock out":"Clock in";}const info=$("clockInfo");if(info)info.textContent=active?`Started ${new Date(clockIn).toLocaleString()}`:"Time entries are saved on this device."}
 function start(user){
