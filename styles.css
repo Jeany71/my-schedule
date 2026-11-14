@@ -262,3 +262,6 @@ body{background:#fff;color:#111;font-family:-apple-system,BlinkMacSystemFont,"Se
 #schedulePage .availability-row.is-available .availability-copy strong{color:#7d8994;font-weight:500}
 #schedulePage .availability-copy small{display:block;margin-top:3px;font-size:11px}
 @media(max-width:390px){#schedulePage .schedule-date-group{grid-template-columns:36px minmax(0,1fr)!important}}
+
+/* Per-day Add is rendered only for empty dates in the Only me view. */
+#schedulePage #allShifts .schedule-add-day{display:inline-flex;align-items:center;}
