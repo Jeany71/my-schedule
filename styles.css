@@ -350,3 +350,13 @@ body{background:#fff;color:#111;font-family:-apple-system,BlinkMacSystemFont,"Se
     font-size: 10px !important;
   }
 }
+/* Fix schedule tab label size */
+#schedulePage nav.schedule-tabs button.schedule-tab > span {
+  font-size: 10px !important;
+  line-height: 1.2 !important;
+  font-weight: 400 !important;
+}
+
+#schedulePage nav.schedule-tabs button.schedule-tab.active > span {
+  font-weight: 600 !important;
+}
