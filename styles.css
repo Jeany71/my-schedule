@@ -294,7 +294,7 @@ body{background:#fff;color:#111;font-family:-apple-system,BlinkMacSystemFont,"Se
 #schedulePage .schedule-tabs .schedule-tab,
 #schedulePage .schedule-tabs .schedule-tab.active,
 #schedulePage .schedule-tabs .schedule-tab span {
-  font-size: 8px !important;
+  font-size: 10px !important;
   line-height: 1.15 !important;
 }
 
