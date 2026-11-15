@@ -16,6 +16,7 @@ const WORKSPACE_ID = "private-shared-workspace";
 const DEMO_MODE = !firebaseConfig.apiKey || !firebaseConfig.projectId;
 
 let auth=null, db=null, employees=[], shifts=[], availabilities=[], currentUserEmail="", pendingShiftStatus="", pendingShiftIds=[], pendingAvailabilityDate="", weekOffset=0, viewMode="week", calendarExpanded=false, homeExpanded=false, unsubE=null, unsubS=null, unsubA=null;
+const collapsedScheduleWeeks=new Set();
 const iso=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 const today=()=>{const d=new Date();return iso(d)};
 let selectedScheduleDate=today(), scheduleFilter="mine", scheduleCompact=false, scheduleUserName="", monthOffset=0, chatFilter="all";
@@ -110,6 +111,7 @@ function renderSchedule(){
   if(!calendarExpanded)rangeEnd.setDate(rangeStart.getDate()+27);
  }else{
   rangeStart=date(selectedScheduleDate);
+  rangeStart.setDate(rangeStart.getDate()-((rangeStart.getDay()+6)%7));
   rangeEnd=new Date(rangeStart);rangeEnd.setDate(rangeEnd.getDate()+27);
  }
  let list=shifts.filter(s=>shiftDateKey(s.date)>=iso(rangeStart)&&shiftDateKey(s.date)<=iso(rangeEnd));
@@ -135,24 +137,36 @@ function renderSchedule(){
  for(const dayGroups of byDay.values())dayGroups.sort((a,b)=>(a[0].start||"").localeCompare(b[0].start||""));
  const mine=selectedAvailability();
  const days=[];for(let d=new Date(rangeStart);d<=rangeEnd;d.setDate(d.getDate()+1))days.push(iso(d));
- host.innerHTML=days.map(day=>{
+ let output="",weekCards=0,weekFirst=null,weekLast=null,weekKey="";
+ const formatWeekDate=key=>date(key).toLocaleDateString([],{month:"short",day:"2-digit"});
+ const renderWeekSummary=()=>{
+  if(!weekFirst||!weekLast)return "";
+  const countLabel=weekCards===1?"shift":"shifts";
+  const collapsed=collapsedScheduleWeeks.has(weekKey);
+  const html=`<button type="button" class="week-summary ${collapsed?"is-collapsed":""}" data-week-toggle="${weekKey}" aria-expanded="${!collapsed}"><span class="week-summary-copy"><strong>Week summary</strong><span>${formatWeekDate(weekFirst)} – ${formatWeekDate(weekLast)} · ${weekCards} ${countLabel}</span></span><span class="week-summary-arrows" aria-hidden="true"><i>⌃</i><i>⌄</i></span></button>`;
+  weekCards=0;weekFirst=null;weekLast=null;weekKey="";
+  return html;
+ };
+ for(const day of days){
   const d=date(day),dayGroups=byDay.get(day)||[];
+  const monday=new Date(d);monday.setDate(monday.getDate()-((monday.getDay()+6)%7));
+  const currentWeekKey=iso(monday);
+  if(weekKey && currentWeekKey!==weekKey) output+=renderWeekSummary();
+  if(!weekKey){weekKey=currentWeekKey;weekFirst=iso(monday);const sunday=new Date(monday);sunday.setDate(sunday.getDate()+6);weekLast=iso(sunday);}
+  weekCards+=dayGroups.length;
+  const collapsed=collapsedScheduleWeeks.has(weekKey);
   const unavailable= scheduleFilter==="mine" ? mine.find(a=>a.startDate<=day&&a.endDate>=day) : null;
   const cards=dayGroups.map(g=>{const first=g[0],ids=g.map(x=>x.id),names=[...new Set(g.flatMap(x=>employeeIds(x).map(name)))],initials=(names[0]||"?").split(/\s+/).map(x=>x[0]||"").join("").slice(0,2).toUpperCase(),status=first.status||"pending",hours=duration(first),durationText=Number.isInteger(hours)?hours+"h":hours.toFixed(1)+"h";return `<article class="schedule-shift-card status-${status}" data-edit="${esc(first.id)}"><div class="schedule-shift-head"><strong class="schedule-shift-title">${esc(first.role||"Shift")}</strong><div class="schedule-avatars"><span class="schedule-avatar">${esc(initials)}</span>${names.length>1?`<span class="schedule-avatar-more">+${names.length-1}</span>`:""}</div></div><div class="schedule-shift-time">${time(first.start)} – ${time(first.end)} (${durationText})</div><p class="schedule-employee-names">${names.map(esc).join(",\n")}</p>${status!=="pending"?`<span class="schedule-status-icon ${status}" aria-label="${status==="confirmed"?"Confirmed":"Rejected"}">${status==="confirmed"?"✓":"×"}</span>`:`<div class="schedule-card-actions"><button class="schedule-reject" data-shift-status="rejected" data-shift-ids="${ids.join(",")}">Reject</button><button class="schedule-confirm" data-shift-status="confirmed" data-shift-ids="${ids.join(",")}">Confirm</button></div>`}</article>`}).join("");
   const availability=unavailable?`<div class="schedule-unavailable"><span>Unavailable</span><b>${unavailable.allDay?"All day":`${time(unavailable.startTime||"09:00")} – ${time(unavailable.endTime||"17:00")}`}</b>${unavailable.note?`<small>${esc(unavailable.note)}</small>`:""}</div>`:"";
-  // Hide the per-day Add shortcut whenever ANY shift exists on this date.
-  // dayGroups catches every card actually rendered for this date (including
-  // Only me results); the full shared shifts check also catches shifts assigned
-  // to other employees or hidden by the current search/filter.
   const hasAnyShiftOnDay=dayGroups.length>0 || shifts.some(shift=>shiftDateKey(shift.date)===day);
-  // Only show the per-day Add shortcut on a truly empty, available day.
-  // A day marked Unavailable (or Time off) must not offer another Add action.
   const hasUnavailableOnDay=Boolean(unavailable);
   const addButton=scheduleFilter==="mine" && !hasAnyShiftOnDay && !hasUnavailableOnDay
    ? `<button type="button" class="schedule-add-day" data-schedule-add="${day}">＋ Add</button>`
    : "";
-  return `<section class="schedule-date-group"><div class="schedule-date-label"><strong>${d.getDate()}</strong><span>${d.toLocaleDateString([],{weekday:"short"})}</span></div><div class="schedule-day-content"><div class="schedule-cards">${cards}</div>${availability}${addButton}</div></section>`;
- }).join("");
+  output+=`<section class="schedule-date-group ${collapsed?"week-day-collapsed":""}" data-week-day="${weekKey}"><div class="schedule-date-label"><strong>${d.getDate()}</strong><span>${d.toLocaleDateString([],{weekday:"short"})}</span></div><div class="schedule-day-content"><div class="schedule-cards">${cards}</div>${availability}${addButton}</div></section>`;
+  if(d.getDay()===0 || day===days[days.length-1]) output+=renderWeekSummary();
+ }
+ host.innerHTML=output;
 }
 
 function renderAvailability(host){
@@ -201,7 +215,7 @@ $("chatList").addEventListener("click",e=>{const b=e.target.closest("[data-chat-
 $("chatCompose").onclick=()=>toast("Messaging will be connected in a later build.");
 $("scheduleSettings").onclick=()=>toast("Schedule settings will be added next.");
 document.querySelectorAll(".schedule-tab").forEach(b=>b.onclick=()=>{scheduleFilter=b.dataset.scheduleFilter;document.querySelectorAll(".schedule-tab").forEach(x=>x.classList.toggle("active",x===b));renderSchedule()});
-document.addEventListener("click",async e=>{let addDay=e.target.closest("[data-schedule-add]");if(addDay){openShift();$("shiftDate").value=addDay.dataset.scheduleAdd;return}let day=e.target.closest("[data-schedule-date]");if(day){selectedScheduleDate=day.dataset.scheduleDate;renderSchedule();return}let statusBtn=e.target.closest("[data-shift-status]");if(statusBtn){e.stopPropagation();pendingShiftStatus=statusBtn.dataset.shiftStatus;pendingShiftIds=statusBtn.dataset.shiftIds.split(",");const first=shifts.find(x=>x.id===pendingShiftIds[0]);$("shiftStatusDialogTitle").textContent=pendingShiftStatus==="confirmed"?"Confirm shift?":"Reject shift?";$("shiftStatusDialogCopy").textContent=first?`${first.role||"Shift"} · ${date(first.date).toLocaleDateString([],{month:"short",day:"numeric"})} · ${time(first.start)} – ${time(first.end)}`:"Are you sure?";$("shiftStatusConfirm").textContent=pendingShiftStatus==="confirmed"?"Confirm":"Reject";$("shiftStatusConfirm").className=pendingShiftStatus==="confirmed"?"primary":"danger";$("shiftStatusDialog").showModal();return}let c=e.target.closest("[data-edit]");if(c){let s=shifts.find(x=>x.id===c.dataset.edit);if(s)openShift(s)}let x=e.target.closest("[data-close]");if(x)$(x.dataset.close).close();let n=e.target.closest("[data-page]");if(n)showPage(n.dataset.page);let g=e.target.closest("[data-go]");if(g)showPage(g.dataset.go)});
+document.addEventListener("click",async e=>{const weekToggle=e.target.closest("[data-week-toggle]");if(weekToggle){const key=weekToggle.dataset.weekToggle;if(collapsedScheduleWeeks.has(key))collapsedScheduleWeeks.delete(key);else collapsedScheduleWeeks.add(key);renderSchedule();return}let addDay=e.target.closest("[data-schedule-add]");if(addDay){openShift();$("shiftDate").value=addDay.dataset.scheduleAdd;return}let day=e.target.closest("[data-schedule-date]");if(day){selectedScheduleDate=day.dataset.scheduleDate;renderSchedule();return}let statusBtn=e.target.closest("[data-shift-status]");if(statusBtn){e.stopPropagation();pendingShiftStatus=statusBtn.dataset.shiftStatus;pendingShiftIds=statusBtn.dataset.shiftIds.split(",");const first=shifts.find(x=>x.id===pendingShiftIds[0]);$("shiftStatusDialogTitle").textContent=pendingShiftStatus==="confirmed"?"Confirm shift?":"Reject shift?";$("shiftStatusDialogCopy").textContent=first?`${first.role||"Shift"} · ${date(first.date).toLocaleDateString([],{month:"short",day:"numeric"})} · ${time(first.start)} – ${time(first.end)}`:"Are you sure?";$("shiftStatusConfirm").textContent=pendingShiftStatus==="confirmed"?"Confirm":"Reject";$("shiftStatusConfirm").className=pendingShiftStatus==="confirmed"?"primary":"danger";$("shiftStatusDialog").showModal();return}let c=e.target.closest("[data-edit]");if(c){let s=shifts.find(x=>x.id===c.dataset.edit);if(s)openShift(s)}let x=e.target.closest("[data-close]");if(x)$(x.dataset.close).close();let n=e.target.closest("[data-page]");if(n)showPage(n.dataset.page);let g=e.target.closest("[data-go]");if(g)showPage(g.dataset.go)});
 $("availabilityAllDay").addEventListener("change",e=>$("availabilityTimes").classList.toggle("hidden",e.target.checked));
 $("availabilityForm").addEventListener("submit",async e=>{e.preventDefault();const data={ownerEmail:currentUserEmail,kind:$("availabilityKind").value,startDate:$("availabilityStartDate").value,endDate:$("availabilityEndDate").value,allDay:$("availabilityAllDay").checked,startTime:$("availabilityStartTime").value||"09:00",endTime:$("availabilityEndTime").value||"17:00",note:$("availabilityNote").value.trim(),repeat:$("availabilityRepeat").checked,createdAt:new Date().toISOString()};if(data.endDate<data.startDate){$("availabilityError").textContent="End date must be on or after start date.";return}try{await add("availability",data);$("availabilityDialog").close();toast("Availability saved");renderSchedule()}catch(err){$("availabilityError").textContent=err.message}});
 document.addEventListener("click",e=>{const m=e.target.closest("[data-availability-date]");if(!m)return;pendingAvailabilityDate=m.dataset.availabilityDate;$("availabilityChoiceDate").textContent=date(pendingAvailabilityDate).toLocaleDateString([],{weekday:"long",month:"long",day:"numeric"});$("availabilityChoiceDialog").showModal()});
